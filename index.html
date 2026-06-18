@@ -164,10 +164,10 @@ async function gasPost(action, data) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  localStorage 永続化
+//  localStorage 永続化（キャッシュクリアのため v2 に更新）
 // ─────────────────────────────────────────────────────────────
-const LS_EXPRS = "quiz-exprs-v1";
-const LS_TOTAL = "quiz-total-v1";
+const LS_EXPRS = "quiz-exprs-v2";
+const LS_TOTAL = "quiz-total-v2";
 function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
@@ -175,9 +175,9 @@ function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val));
 //  ダミーデータ（GAS未接続時のフォールバック）
 // ─────────────────────────────────────────────────────────────
 const DUMMY = [
-  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",           exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
-  { id:2,  phrase:"hit the nail on the head", meaning:"的を射る・ズバリ言い当てる",      example:"You hit the nail on the head.",               exampleJa:"まさにその通りです。",                  url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
-  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                    url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
+  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",            exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
+  { id:2,  phrase:"hit the nail on the head", meaning:"的を射る・ズバリ言い当てる",      example:"You hit the nail on the head.",               exampleJa:"まさにその通りです。",                 url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
+  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                     url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
   { id:4,  phrase:"bite the bullet",          meaning:"歯を食いしばって頑張る",          example:"Just bite the bullet and do it.",             exampleJa:"歯を食いしばってやるしかない。",        url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
   { id:5,  phrase:"piece of cake",            meaning:"朝飯前・超簡単なこと",            example:"The test was a piece of cake.",               exampleJa:"そのテストは朝飯前だった。",            url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
   { id:6,  phrase:"spill the beans",          meaning:"秘密をバラす・うっかり漏らす",    example:"Don't spill the beans!",                      exampleJa:"秘密を漏らさないで！",                  url:"https://youtube.com", status:"未学習", attempts:2, correctCount:1 },
@@ -223,7 +223,7 @@ function buildOptions(correct, pool) {
 function blankify(sentence, phrase) {
   return sentence.replace(
     new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "i"),
-    "【　　　　】"
+    "【    】"
   );
 }
 
@@ -243,7 +243,7 @@ function generateQuiz(expression, all) {
     const words = expression.phrase.split(" ");
     const bi    = Math.floor(Math.random() * words.length);
     return { type, question:"空欄に入る単語を選んでください",
-             phrase: words.map((w,i) => i===bi ? "【　　】" : w).join(" "),
+             phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
              subInfo:`例) ${expression.example}`,
              options: buildOptions(words[bi], others.flatMap(e=>e.phrase.split(" "))),
              answer: words[bi], expression };
@@ -260,7 +260,7 @@ function generateQuiz(expression, all) {
              answer: expression.phrase, expression };
   }
   // example_blank
-  return { type:"example_blank", question:"例文の【　　　　】に入るフレーズは？",
+  return { type:"example_blank", question:"例文の【    】に入るフレーズは？",
            exampleBlanked: blankify(expression.example, expression.phrase),
            exampleJa: expression.exampleJa,
            options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
