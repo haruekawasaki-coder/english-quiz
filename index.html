@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Quiz App</title>
+  <title>English Quiz (最新版)</title>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,13 +16,8 @@
     }
     body { 
       font-family: 'Helvetica Neue', Arial, sans-serif; 
-      padding: 20px; 
-      max-width: 600px; 
-      margin: 0 auto; 
-      background-color: #f9f9f9;
+      padding: 20px; max-width: 600px; margin: 0 auto; background-color: #f9f9f9;
     }
-    
-    /* 選択肢ボタンの基本デザイン */
     .opt {
       display: block; width: 100%; padding: 15px; margin: 10px 0;
       font-size: 16px; font-weight: bold; border: 2px solid #ddd; 
@@ -30,8 +25,6 @@
       transition: 0.2s; text-align: left;
     }
     .opt:hover:not(:disabled) { background: #f0f0f0; }
-    
-    /* 正解・不正解時のデザイン */
     .opt.ok { border-color: var(--green) !important; background: var(--gpale) !important; color: var(--gd) !important; box-shadow: 0 3px 0 var(--gd) !important; }
     .opt.ng { border-color: var(--red) !important; background: #ffe5e5 !important; color: var(--rd) !important; box-shadow: 0 3px 0 var(--rd) !important; animation: shake .3s; }
     .opt:disabled { cursor: default; }
@@ -47,6 +40,9 @@
   <div id="root"></div>
 
   <script type="text/babel">
+    // 💡 キャッシュ突破確認用：コンソールにメッセージを出します
+    console.log("【確認用】最新版のコードが正しく読み込まれました！Babelエラーは出ないはずです。");
+
     const { useState, useEffect } = React;
 
     function App() {
@@ -57,19 +53,16 @@
       const [loading, setLoading] = useState(true);
       const [isFinished, setIsFinished] = useState(false);
 
-      // ⚠️ ここにあなたのGASのWebアプリURLを貼り付けてください
       const GAS_URL = "ここにGASのURLを貼り付けます";
 
       useEffect(() => {
         const fetchQuiz = async () => {
           try {
-            // ▼ 本番用：GASからデータを取得する処理（GASのURLを入れたら動きます）
             if (GAS_URL.startsWith("http")) {
               const response = await fetch(GAS_URL);
               const data = await response.json();
               setQuestions(data);
             } else {
-              // ▼ テスト用：GASのURLがまだ無い場合の仮データ
               setQuestions([
                 { question: "apple", options: ["りんご", "みかん", "ばなな", "ぶどう"], answer: "りんご" },
                 { question: "dog", options: ["ねこ", "いぬ", "とり", "うさぎ"], answer: "いぬ" },
@@ -88,20 +81,12 @@
       const handleAnswer = (option) => {
         setSelected(option);
         const currentQ = questions[currentIndex];
-        
-        // 正解ならスコアを加算
-        if (option === currentQ.answer) {
-          setScore(score + 1);
-        }
+        if (option === currentQ.answer) setScore(score + 1);
 
-        // 1秒後に次の問題へ進む
         setTimeout(() => {
           setSelected(null);
-          if (currentIndex + 1 < questions.length) {
-            setCurrentIndex(currentIndex + 1);
-          } else {
-            setIsFinished(true);
-          }
+          if (currentIndex + 1 < questions.length) setCurrentIndex(currentIndex + 1);
+          else setIsFinished(true);
         }, 1000); 
       };
 
@@ -125,22 +110,14 @@
           <div>
             {currentQ.options.map((option, index) => {
               let btnClass = "opt";
-              
-              // 選択肢がクリックされた後の色付け判定
               if (selected) {
-                if (option === currentQ.answer) {
-                  btnClass += " ok"; // 正解の選択肢は緑色
-                } else if (option === selected) {
-                  btnClass += " ng"; // 間違って選んだ選択肢は赤色に揺れる
-                }
+                if (option === currentQ.answer) btnClass += " ok";
+                else if (option === selected) btnClass += " ng";
               }
-
               return (
                 <button 
-                  key={index} 
-                  className={btnClass}
-                  onClick={() => handleAnswer(option)}
-                  disabled={selected !== null}
+                  key={index} className={btnClass}
+                  onClick={() => handleAnswer(option)} disabled={selected !== null}
                 >
                   {option}
                 </button>
