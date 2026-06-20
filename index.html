@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English Quiz (最新版)</title>
+  <title>English Quiz (バグ修正版)</title>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
 
   <style>
     :root {
@@ -39,9 +40,8 @@
 <body>
   <div id="root"></div>
 
-  <script type="text/babel">
-    // 💡 キャッシュ突破確認用：コンソールにメッセージを出します
-    console.log("【確認用】最新版のコードが正しく読み込まれました！Babelエラーは出ないはずです。");
+  <script type="text/babel" data-type="module" data-presets="react">
+    console.log("【確認用】バグ修正版のコードが読み込まれました。");
 
     const { useState, useEffect } = React;
 
@@ -53,6 +53,7 @@
       const [loading, setLoading] = useState(true);
       const [isFinished, setIsFinished] = useState(false);
 
+      // ⚠️ ここにあなたのGASのWebアプリURLを貼り付けてください
       const GAS_URL = "ここにGASのURLを貼り付けます";
 
       useEffect(() => {
