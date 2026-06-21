@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (大文字ヒント修正版)</title>
+  <title>English Quiz (分離フレーズ穴埋め対応版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
+  <!-- Babelバグ回避のための安定版指定 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
@@ -55,11 +56,16 @@
     .ex-sentence{margin-top:6px;padding:12px 14px;background:#fff5f0;border:2px solid #ffd6c0;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;}
     .ex-ja{margin-top:5px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.55;}
     
-    /* Speaker */
+    /* Speaker Main */
     .speak-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 0;width:85%;padding:16px;border:3px solid var(--yellow);border-radius:var(--r);background:#fffbf0;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;color:#8a6200;box-shadow:0 4px 0 var(--yd);-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s;}
     .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
     @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
+
+    /* フィードバックエリア用の小さなスピーカーアイコン */
+    .mini-speak{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e5f6fd;color:var(--bd);border:1px solid #b3e5fc;cursor:pointer;margin-left:8px;vertical-align:middle;transition:background .2s, transform .1s;}
+    .mini-speak:active{transform:scale(0.9);}
+    .mini-speak.playing{background:var(--blue);color:#fff;animation:spin 1.5s linear infinite;}
     
     /* Options */
     .opts{display:flex;flex-direction:column;gap:8px;margin:8px 16px 0;}
@@ -107,7 +113,10 @@
       .btn-next:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--gd);}
       .btn-master:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--yd);}
     }
-    .btn-src{background:none;border:2px solid var(--border);border-radius:var(--r);padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
+    
+    /* リンク用ボタンのデザインを統一 */
+    .btn-link-wrap{display:flex;gap:8px;}
+    .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
     
     /* Bottom stats */
     .stats-bar{background:var(--card);border-top:2px solid var(--border);padding:8px 10px 10px;display:flex;align-items:stretch;position:sticky;bottom:0;z-index:100;}
@@ -153,6 +162,7 @@
 <body>
 <div id="root"></div>
 
+<!-- 魔法のおまじない（モジュール指定） -->
 <script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
 
@@ -193,7 +203,7 @@ const DUMMY = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  Speech Synthesis
+//  Speech Synthesis (音声読み上げヘルパー)
 // ─────────────────────────────────────────────────────────────
 function speakText(text, onEnd) {
   if (!window.speechSynthesis) { onEnd?.(); return; }
@@ -210,8 +220,24 @@ function speakText(text, onEnd) {
   window.speechSynthesis.getVoices().length ? go() : (window.speechSynthesis.onvoiceschanged = go);
 }
 
+// 独立したミニスピーカー用コンポーネント
+function MiniSpeaker({ text }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const handlePlay = (e) => {
+    e.stopPropagation();
+    if (isPlaying) return;
+    setIsPlaying(true);
+    speakText(text, () => setIsPlaying(false));
+  };
+  return (
+    <span className={`mini-speak ${isPlaying ? "playing" : ""}`} onClick={handlePlay} title="発音を聴く">
+      <SpeakerIc style={{width:"1em",height:"1em"}}/>
+    </span>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
-//  Quiz Generator（小文字化対応）
+//  Quiz Generator（★修正：分離フレーズ対応の blankify）
 // ─────────────────────────────────────────────────────────────
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
@@ -225,11 +251,36 @@ function buildOptions(correct, pool) {
   return shuffle(opts);
 }
 
+// ★修正：間に単語が挟まる熟語（take ~ for grantedなど）でもしっかり穴埋めできるように改良
 function blankify(sentence, phrase) {
-  return sentence.replace(
-    new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "i"),
-    "【    】"
-  );
+  const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  
+  // 1. 完全一致の置換（普通のフレーズ）
+  const exactRegex = new RegExp(escapeRegExp(phrase), "i");
+  if (exactRegex.test(sentence)) {
+    return sentence.replace(exactRegex, "【    】");
+  }
+  
+  // 2. フレーズが離れて配置されている場合（例: take your health for granted）
+  //    フレーズを単語ごとに分解し、例文の中にある一致する単語を個別に【 】に変える
+  const words = phrase.split(/\s+/).filter(w => w.length > 0);
+  let result = sentence;
+  let matchCount = 0;
+  
+  words.forEach(w => {
+    const wordRegex = new RegExp("\\b" + escapeRegExp(w) + "\\b", "ig");
+    if (wordRegex.test(result)) {
+      result = result.replace(wordRegex, "【 】");
+      matchCount++;
+    }
+  });
+  
+  // 3. 過去形などで1単語もマッチしなかった場合への最終保険
+  if (matchCount === 0) {
+    return "【    】 (※元の文: " + sentence + ")";
+  }
+  
+  return result;
 }
 
 function generateQuiz(expression, all) {
@@ -242,7 +293,6 @@ function generateQuiz(expression, all) {
   const type = types[Math.floor(Math.random() * types.length)];
 
   if (type === "multiple_choice") {
-    // 日本語の選択肢はそのまま
     const correct = expression.meaning.split("・")[0].split("。")[0];
     return { 
       type, question:`"${expression.phrase}" の意味は？`,
@@ -253,7 +303,6 @@ function generateQuiz(expression, all) {
   if (type === "fill_blank") {
     const words = expression.phrase.split(" ");
     const bi    = Math.floor(Math.random() * words.length);
-    // ★大文字ヒント修正：すべて小文字に統一
     const ansLow = words[bi].toLowerCase();
     return { 
       type, question:"空欄に入る単語を選んでください",
@@ -264,7 +313,6 @@ function generateQuiz(expression, all) {
     };
   }
   if (type === "meaning_match") {
-    // ★大文字ヒント修正：すべて小文字に統一
     const ansLow = expression.phrase.toLowerCase();
     return { 
       type, question:"次の意味に合う英語表現はどれ？",
@@ -274,7 +322,6 @@ function generateQuiz(expression, all) {
     };
   }
   if (type === "listening") {
-    // ★大文字ヒント修正：すべて小文字に統一
     const ansLow = expression.phrase.toLowerCase();
     return { 
       type, question:"🎧 音声を聞いて、正しい英語表現を選んでください",
@@ -290,7 +337,6 @@ function generateQuiz(expression, all) {
     };
   }
   // example_blank
-  // ★大文字ヒント修正：すべて小文字に統一
   const ansLow = expression.phrase.toLowerCase();
   return { 
     type:"example_blank", question:"例文の【    】に入るフレーズは？",
@@ -312,6 +358,7 @@ const LinkIc    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const RefreshIc = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>;
 const SpeakerIc = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
 const CloseIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.1em",height:"1.1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const SearchIc  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
 
 // ─────────────────────────────────────────────────────────────
 //  Confetti
@@ -382,7 +429,7 @@ function StatusListModal({ status, expressions, onClose }) {
                 <div key={expr.id} style={{background:"#fff",border:"2px solid #EFEFEF",borderRadius:14,padding:"12px 14px"}}>
                   <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:15,fontWeight:800}}>{expr.phrase}</div>
+                      <div style={{fontSize:15,fontWeight:800}}>{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
                       <div style={{fontSize:12,color:"#888",marginTop:3,lineHeight:1.5}}>{expr.meaning.split("。")[0]}</div>
                       <div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:3}}>{expr.example}</div>
                     </div>
@@ -636,10 +683,13 @@ function App() {
                 <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
                   <div className="fdbk-ttl">{isCorrect?<><CheckIc/> 正解！素晴らしい！</>:<><CrossIc/> 不正解…</>}</div>
                   <div className="fdbk-body">
-                    {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong></span></> : <strong>{quiz.expression.phrase}</strong>}
+                    {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span></> : <span><strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span>}
                     <br/>{quiz.expression.meaning}
                   </div>
-                  <div className="fdbk-ex">📖 {quiz.expression.example}<br/>🇯🇵 {quiz.expression.exampleJa}</div>
+                  <div className="fdbk-ex">
+                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>
+                    🇯🇵 {quiz.expression.exampleJa}
+                  </div>
                   {curExpr&&curExpr.attempts>0&&(
                     <div className="cum-row">
                       <div className="cum-label">この表現の累計正答率</div>
@@ -653,7 +703,11 @@ function App() {
 
               <div className="btns">
                 {selected&&<><button className="btn btn-next" onClick={handleNext}>次の問題へ →</button><button className="btn btn-master" onClick={handleMastered}><StarIc/> この表現はもう覚えた！</button></>}
-                <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><LinkIc/> ソース動画を見る</button>
+                
+                <div className="btn-link-wrap">
+                  <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><LinkIc/> 動画を見る</button>
+                  <button className="btn-src" onClick={()=>window.open(`https://www.google.com/search?q=${encodeURIComponent(quiz.expression.phrase + " 意味 使い方")}`,"_blank")}><SearchIc/> Webで検索</button>
+                </div>
               </div>
             </>
           ):null}
@@ -677,7 +731,7 @@ function App() {
                 return (
                   <div key={expr.id} className="ll-item">
                     <div className="ll-icon"><StarIc/></div>
-                    <div className="ll-body"><div className="ll-phrase">{expr.phrase}</div><div className="ll-meaning">{expr.meaning.split("。")[0]}</div><div className="ll-ex">{expr.example}</div><div className="ll-acc"><div style={{fontSize:10,fontWeight:700,color:"var(--muted)"}}>累計正答率</div><div className="ll-bar-wrap"><div className="ll-bar" style={{width:`${cp}%`,background:bc}}/></div><div style={{fontSize:11,fontWeight:900,color:bc}}>{cp}%</div><div style={{fontSize:10,color:"var(--muted)"}}>({expr.attempts}回)</div></div></div>
+                    <div className="ll-body"><div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div><div className="ll-meaning">{expr.meaning.split("。")[0]}</div><div className="ll-ex">{expr.example}</div><div className="ll-acc"><div style={{fontSize:10,fontWeight:700,color:"var(--muted)"}}>累計正答率</div><div className="ll-bar-wrap"><div className="ll-bar" style={{width:`${cp}%`,background:bc}}/></div><div style={{fontSize:11,fontWeight:900,color:bc}}>{cp}%</div><div style={{fontSize:10,color:"var(--muted)"}}>({expr.attempts}回)</div></div></div>
                     <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><RefreshIc/> 戻す</button>
                   </div>
                 );
