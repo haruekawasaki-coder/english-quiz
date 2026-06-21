@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (苦手克服モード搭載版)</title>
+  <title>English Quiz (大文字ヒント修正版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
-  <!-- Babelバグ回避のための安定版指定 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
@@ -26,13 +25,13 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
     
-    /* Nav (3つのタブが綺麗に並ぶよう微調整) */
+    /* Nav */
     .nav{background:var(--card);border-bottom:2px solid var(--border);display:flex;position:sticky;top:0;z-index:100;}
     .ntab{flex:1;padding:12px 2px 10px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:3px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
     .ntab.on{color:var(--green);border-bottom-color:var(--green);}
     .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:11px;font-weight:900;}
 
-    /* Batch dots (上部の10個の丸進捗) */
+    /* Batch dots */
     .bdots{display:flex;gap:6px;justify-content:center;padding:18px 16px 4px;}
     .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
@@ -154,7 +153,6 @@
 <body>
 <div id="root"></div>
 
-<!-- 魔法のおまじない（モジュール指定） -->
 <script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
 
@@ -186,12 +184,12 @@ function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catc
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 // ─────────────────────────────────────────────────────────────
-//  ダミーデータ（テスト用に1つを「正答率0%の苦手表現」に設定）
+//  ダミーデータ
 // ─────────────────────────────────────────────────────────────
 const DUMMY = [
-  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",            exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"学習中", attempts:1, correctCount:0 }, // 0% (苦手確定)
+  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",            exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"学習中", attempts:1, correctCount:0 },
   { id:2,  phrase:"hit the nail on the head", meaning:"的を射る・ズバリ言い当てる",      example:"You hit the nail on the head.",               exampleJa:"まさにその通りです。",                 url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
-  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                     url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 }, // 75% (ライティング確定)
+  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                     url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -213,7 +211,7 @@ function speakText(text, onEnd) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Quiz Generator（ヒント遮断 ＋ 50%ライティング ＋ 苦手モード対応）
+//  Quiz Generator（小文字化対応）
 // ─────────────────────────────────────────────────────────────
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
@@ -239,11 +237,12 @@ function generateQuiz(expression, all) {
   const acc    = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
   
   const types  = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
-  if (acc >= 50) types.push("writing"); // 50%以上でタイピング問題追加
+  if (acc >= 50) types.push("writing");
 
   const type = types[Math.floor(Math.random() * types.length)];
 
   if (type === "multiple_choice") {
+    // 日本語の選択肢はそのまま
     const correct = expression.meaning.split("・")[0].split("。")[0];
     return { 
       type, question:`"${expression.phrase}" の意味は？`,
@@ -254,27 +253,33 @@ function generateQuiz(expression, all) {
   if (type === "fill_blank") {
     const words = expression.phrase.split(" ");
     const bi    = Math.floor(Math.random() * words.length);
+    // ★大文字ヒント修正：すべて小文字に統一
+    const ansLow = words[bi].toLowerCase();
     return { 
       type, question:"空欄に入る単語を選んでください",
       phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
-      subInfo:`💡 意味：${expression.meaning.split("。")[0]}`, // 例文ヒント完全遮断
-      options: buildOptions(words[bi], others.flatMap(e=>e.phrase.split(" "))),
-      answer: words[bi], expression 
+      subInfo:`💡 意味：${expression.meaning.split("。")[0]}`,
+      options: buildOptions(ansLow, others.flatMap(e=>e.phrase.split(" ").map(w=>w.toLowerCase()))),
+      answer: ansLow, expression 
     };
   }
   if (type === "meaning_match") {
+    // ★大文字ヒント修正：すべて小文字に統一
+    const ansLow = expression.phrase.toLowerCase();
     return { 
       type, question:"次の意味に合う英語表現はどれ？",
       meaningHint: expression.meaning.split("。")[0],
-      options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-      answer: expression.phrase, expression 
+      options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
+      answer: ansLow, expression 
     };
   }
   if (type === "listening") {
+    // ★大文字ヒント修正：すべて小文字に統一
+    const ansLow = expression.phrase.toLowerCase();
     return { 
       type, question:"🎧 音声を聞いて、正しい英語表現を選んでください",
-      options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-      answer: expression.phrase, expression 
+      options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
+      answer: ansLow, expression 
     };
   }
   if (type === "writing") {
@@ -284,12 +289,15 @@ function generateQuiz(expression, all) {
       answer: expression.phrase, expression
     };
   }
+  // example_blank
+  // ★大文字ヒント修正：すべて小文字に統一
+  const ansLow = expression.phrase.toLowerCase();
   return { 
     type:"example_blank", question:"例文の【    】に入るフレーズは？",
     exampleBlanked: blankify(expression.example, expression.phrase),
     exampleJa: expression.exampleJa,
-    options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-    answer: expression.phrase, expression 
+    options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
+    answer: ansLow, expression 
   };
 }
 
@@ -406,7 +414,7 @@ const BATCH_SIZE = 10;
 function App() {
   const [loaded,        setLoaded]        = useState(false);
   const [gasError,      setGasError]      = useState(false);
-  const [tab,           setTab]           = useState("quiz"); // "quiz" | "weak" | "learned"
+  const [tab,           setTab]           = useState("quiz"); 
   const [exprs,         setExprs]         = useState([]);
   const [quiz,          setQuiz]          = useState(null);
   const [selected,      setSelected]      = useState(null);
@@ -450,7 +458,6 @@ function App() {
     if (exprs.length) lsSet(LS_EXPRS, exprs);
   }, [exprs]);
 
-  // ★ 変更：現在のタブ状態（通常 or 苦手）に応じて出題プールを分ける
   const pickQuiz = useCallback((list, targetTab = tab) => {
     const isW  = targetTab === "weak";
     const pool = isW 
@@ -491,7 +498,7 @@ function App() {
 
     const nb = [...batch, { expressionId:quiz.expression.id, correct }];
     const nt = totalAnswered+1;
-    setBatch(nb.length > BATCH_SIZE ? nb.slice(-BATCH_SIZE) : nb); // 上部ドットは直近10問を維持
+    setBatch(nb.length > BATCH_SIZE ? nb.slice(-BATCH_SIZE) : nb); 
     setTotalAnswered(nt);
     lsSet(LS_TOTAL, nt);
   }
@@ -526,10 +533,11 @@ function App() {
 
   const learned    = exprs.filter(e=>e.status==="習得済み");
   const active     = exprs.filter(e=>e.status!=="習得済み");
-  const weakList   = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7); // ★苦手リスト
+  const weakList   = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7); 
   const masteredN  = learned.length;
   const learningN  = exprs.filter(e=>e.status==="学習中").length;
   const unlearnedN = exprs.filter(e=>e.status==="未学習").length;
+  const batchN     = batch.length;
   const curExpr    = quiz?exprs.find(e=>e.id===quiz.expression.id):null;
   const cumPct     = curExpr&&curExpr.attempts>0?Math.round(curExpr.correctCount/curExpr.attempts*100):null;
   const cumColor   = cumPct==null?"#ccc":cumPct>=70?"var(--green)":cumPct>=40?"var(--yellow)":"var(--red)";
@@ -555,7 +563,6 @@ function App() {
           <BookIc/> クイズ
         </button>
         
-        {/* ★ 新設：苦手克服タブ（赤バッジ付き） */}
         <button className={`ntab${tab==="weak"?" on":""}`} onClick={()=>switchTab("weak")}>
           <span style={{fontSize:13}}>⚠️ 苦手克服</span>
           {weakList.length > 0 && <span className="badge-red">{weakList.length}</span>}
@@ -567,7 +574,7 @@ function App() {
         </button>
       </nav>
 
-      {/* ═══ QUIZ ＆ WEAK TAB（共通のクイズ描画エリア） ════════════ */}
+      {/* ═══ QUIZ ＆ WEAK TAB ════════════ */}
       {(tab==="quiz" || tab==="weak")&&(
         <div className="scroll">
           <div className="bdots">
@@ -577,7 +584,6 @@ function App() {
             })}
           </div>
 
-          {/* モードごとの「出題ゼロ」メッセージ */}
           {tab==="weak" && weakList.length===0 ? (
             <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px",textAlign:"center",gap:14}}>
               <div style={{fontSize:56}}>✨</div>
