@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (完全復活版)</title>
+  <title>English Quiz (カスタム版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -28,21 +28,14 @@
     .nav{background:var(--card);border-bottom:2px solid var(--border);display:flex;position:sticky;top:0;z-index:100;}
     .ntab{flex:1;padding:13px 8px 11px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:3px solid transparent;transition:all .2s;}
     .ntab.on{color:var(--green);border-bottom-color:var(--green);}
-    /* Progress */
-    .prog-wrap{padding:12px 16px 6px;}
-    .prog-label{font-size:11px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:5px;}
-    .prog-row{display:flex;align-items:center;gap:10px;}
-    .prog-bar{flex:1;height:12px;background:var(--border);border-radius:99px;overflow:hidden;}
-    .prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),#6dd5fa);border-radius:99px;transition:width .5s cubic-bezier(.34,1.56,.64,1);}
-    .prog-pct{font-size:13px;font-weight:900;color:var(--blue);min-width:36px;text-align:right;}
-    /* Batch dots */
-    .bdots{display:flex;gap:5px;justify-content:center;padding:6px 16px 2px;}
-    .bdot{width:10px;height:10px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
+    /* Batch dots (バーを消したので上部の余白を調整) */
+    .bdots{display:flex;gap:6px;justify-content:center;padding:18px 16px 4px;}
+    .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
     .bdot.ng{background:var(--red);}
-    .bdot.cur{background:var(--blue);transform:scale(1.25);}
+    .bdot.cur{background:var(--blue);transform:scale(1.3);}
     /* Quiz card */
-    .qcard{margin:8px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
+    .qcard{margin:10px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
     .qbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:99px;padding:3px 12px;margin-bottom:10px;}
     .qbadge.mc{background:#d7f5b1;color:#3a9100;}
     .qbadge.fb{background:#ddeeff;color:var(--bd);}
@@ -109,7 +102,6 @@
     .snum.y{color:var(--yd);}
     .slbl{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
     .tap-hint{font-size:8px;color:#ccc;margin-top:1px;}
-    .sbatch{flex:1.4;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;}
     /* Toast */
     .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);background:#1a1a1a;color:#fff;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;}
     .toast.on{transform:translateX(-50%) translateY(0);}
@@ -165,7 +157,7 @@ async function gasPost(action, data) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  localStorage 永続化（バージョンをv3に更新）
+//  localStorage 永続化
 // ─────────────────────────────────────────────────────────────
 const LS_EXPRS = "quiz-exprs-v3";
 const LS_TOTAL = "quiz-total-v3";
@@ -238,7 +230,7 @@ function generateQuiz(expression, all) {
     const bi    = Math.floor(Math.random() * words.length);
     return { type, question:"空欄に入る単語を選んでください",
              phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
-             subInfo:`例) ${expression.example}`,
+             subInfo:`例) ${blankify(expression.example, expression.phrase)}`,
              options: buildOptions(words[bi], others.flatMap(e=>e.phrase.split(" "))),
              answer: words[bi], expression };
   }
@@ -556,8 +548,6 @@ function App() {
   const learningN     = exprs.filter(e=>e.status==="学習中").length;
   const unlearnedN    = exprs.filter(e=>e.status==="未学習").length;
   const batchN        = batch.length;
-  const batchCorrectN = batch.filter(b=>b.correct).length;
-  const batchProgPct  = Math.round((batchN/BATCH_SIZE)*100);
   const curExpr  = quiz?exprs.find(e=>e.id===quiz.expression.id):null;
   const cumPct   = curExpr&&curExpr.attempts>0?Math.round(curExpr.correctCount/curExpr.attempts*100):null;
   const cumColor = cumPct==null?"#ccc":cumPct>=70?"var(--green)":cumPct>=40?"var(--yellow)":"var(--red)";
@@ -592,16 +582,6 @@ function App() {
       {/* ═══ QUIZ TAB ══════════════════════════════════════════════ */}
       {tab==="quiz"&&(
         <div className="scroll">
-          <div className="prog-wrap">
-            <div className="prog-label">
-              <span>このセットの進捗</span>
-              <span style={{color:"var(--blue)",fontWeight:900}}>{batchN} / {BATCH_SIZE} 問</span>
-            </div>
-            <div className="prog-row">
-              <div className="prog-bar"><div className="prog-fill" style={{width:`${batchProgPct}%`}}/></div>
-              <div className="prog-pct">{batchProgPct}%</div>
-            </div>
-          </div>
           <div className="bdots">
             {Array.from({length:BATCH_SIZE},(_,i)=>{
               const ans=batch[i]; let cls="bdot";
@@ -732,14 +712,6 @@ function App() {
           <div className="snum m">{unlearnedN}</div>
           <div className="slbl">未学習</div>
           <div className="tap-hint">▲ 一覧</div>
-        </div>
-        <div className="sdiv"/>
-        <div className="sbatch">
-          <div style={{display:"flex",alignItems:"baseline",gap:2}}>
-            <span style={{fontSize:16,fontWeight:900,color:"var(--blue)"}}>{batchCorrectN}</span>
-            <span style={{fontSize:12,fontWeight:700,color:"var(--muted)"}}>/{batchN}</span>
-          </div>
-          <div style={{fontSize:9,fontWeight:800,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".04em",marginTop:3}}>今回10問</div>
         </div>
         <div className="sdiv"/>
         <div className="schip">
