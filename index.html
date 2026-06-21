@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (カスタム版)</title>
+  <title>English Quiz (苦手克服モード搭載版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
+  <!-- Babelバグ回避のための安定版指定 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
@@ -24,16 +25,20 @@
     html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);}
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
-    /* Nav */
+    
+    /* Nav (3つのタブが綺麗に並ぶよう微調整) */
     .nav{background:var(--card);border-bottom:2px solid var(--border);display:flex;position:sticky;top:0;z-index:100;}
-    .ntab{flex:1;padding:13px 8px 11px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:3px solid transparent;transition:all .2s;}
+    .ntab{flex:1;padding:12px 2px 10px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:3px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
     .ntab.on{color:var(--green);border-bottom-color:var(--green);}
-    /* Batch dots (バーを消したので上部の余白を調整) */
+    .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:11px;font-weight:900;}
+
+    /* Batch dots (上部の10個の丸進捗) */
     .bdots{display:flex;gap:6px;justify-content:center;padding:18px 16px 4px;}
     .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
     .bdot.ng{background:var(--red);}
     .bdot.cur{background:var(--blue);transform:scale(1.3);}
+    
     /* Quiz card */
     .qcard{margin:10px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
     .qbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:99px;padding:3px 12px;margin-bottom:10px;}
@@ -42,18 +47,21 @@
     .qbadge.mm{background:#f0e0ff;color:#9340c8;}
     .qbadge.ls{background:#fff3cd;color:#8a6200;}
     .qbadge.ex{background:#ffe4e4;color:#c73434;}
+    .qbadge.wr{background:#e0f7fa;color:#006064;}
     .qquestion{font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.5;}
     .qphrase{font-size:23px;font-weight:900;margin:4px 0 6px;line-height:1.25;}
     .blank-box{font-size:18px;font-weight:800;background:#f0f0f0;border-radius:10px;padding:10px 14px;margin:4px 0 6px;line-height:1.5;}
-    .sub-info{margin-top:8px;padding:10px 13px;background:#f7f7f7;border-radius:10px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.6;}
-    .mhint{margin-top:6px;padding:11px 14px;background:#f7f7f7;border-radius:12px;font-size:14px;font-weight:600;line-height:1.65;}
+    .sub-info{margin-top:8px;padding:10px 13px;background:#f7f7f7;border-radius:10px;font-size:13px;font-weight:700;color:var(--gd);line-height:1.5;}
+    .mhint{margin-top:6px;padding:11px 14px;background:#f7f7f7;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;color:#222;}
     .ex-sentence{margin-top:6px;padding:12px 14px;background:#fff5f0;border:2px solid #ffd6c0;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;}
     .ex-ja{margin-top:5px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.55;}
+    
     /* Speaker */
     .speak-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 0;width:85%;padding:16px;border:3px solid var(--yellow);border-radius:var(--r);background:#fffbf0;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;color:#8a6200;box-shadow:0 4px 0 var(--yd);-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s;}
     .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
     @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
+    
     /* Options */
     .opts{display:flex;flex-direction:column;gap:8px;margin:8px 16px 0;}
     .opt{border:2.5px solid var(--border);border-radius:var(--r);padding:13px 18px;background:var(--card);font-family:inherit;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;box-shadow:0 3px 0 var(--border);-webkit-tap-highlight-color:transparent;outline:none;}
@@ -62,6 +70,16 @@
     .opt.ng{border-color:var(--red)!important;background:#ffe5e5!important;color:var(--rd)!important;box-shadow:0 3px 0 var(--rd)!important;animation:shake .3s;}
     .opt:disabled{cursor:default;}
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+    
+    /* ライティングフォーム */
+    .write-form{display:flex;gap:8px;margin:8px 16px 0;}
+    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;}
+    .write-input:focus{border-color:var(--blue);}
+    .write-input:disabled{background:#eef1f5;color:var(--muted);border-color:#d5d9e0;box-shadow:none;}
+    .btn-submit-write{border:none;border-radius:12px;padding:0 24px;font-family:inherit;font-size:15px;font-weight:800;background:var(--blue);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--bd);transition:transform .1s,box-shadow .1s;}
+    .btn-submit-write:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
+    .btn-submit-write:disabled{background:var(--border);box-shadow:none;cursor:default;}
+
     /* Feedback */
     .fdbk{margin:10px 16px 0;border-radius:var(--r);padding:13px 16px;border:2px solid;animation:sup .28s cubic-bezier(.34,1.56,.64,1);}
     .fdbk.ok{background:var(--gpale);border-color:var(--green);}
@@ -69,8 +87,8 @@
     .fdbk-ttl{font-size:15px;font-weight:900;display:flex;align-items:center;gap:6px;margin-bottom:5px;}
     .fdbk.ok .fdbk-ttl{color:var(--gd);}
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
-    .fdbk-body{font-size:13px;line-height:1.65;}
-    .fdbk-ex{margin-top:6px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.6;border-top:1px solid rgba(0,0,0,.08);padding-top:6px;}
+    .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
+    .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
     .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
     .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
     .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
@@ -78,6 +96,7 @@
     .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
     .cum-count{font-size:10px;color:var(--muted);}
     @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    
     /* Buttons */
     .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
     .btn{border:none;border-radius:var(--r);padding:15px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,box-shadow .12s;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -90,6 +109,7 @@
       .btn-master:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--yd);}
     }
     .btn-src{background:none;border:2px solid var(--border);border-radius:var(--r);padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
+    
     /* Bottom stats */
     .stats-bar{background:var(--card);border-top:2px solid var(--border);padding:8px 10px 10px;display:flex;align-items:stretch;position:sticky;bottom:0;z-index:100;}
     .sdiv{width:1px;background:var(--border);margin:4px 0;}
@@ -102,9 +122,11 @@
     .snum.y{color:var(--yd);}
     .slbl{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
     .tap-hint{font-size:8px;color:#ccc;margin-top:1px;}
+    
     /* Toast */
     .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);background:#1a1a1a;color:#fff;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;}
     .toast.on{transform:translateX(-50%) translateY(0);}
+    
     /* Learned list */
     .ll-hdr{padding:16px 16px 8px;}
     .ll-title{font-size:21px;font-weight:900;}
@@ -121,19 +143,18 @@
     .ll-bar{height:100%;border-radius:99px;}
     .btn-restore{border:2px solid var(--border);border-radius:10px;padding:7px 11px;background:none;font-family:inherit;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
     .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    
     /* Confetti */
     @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
-    /* Spinner */
     @keyframes spin{to{transform:rotate(360deg)}}
-    /* Banner */
     .banner{padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
-    .banner.warn{background:#fff3cd;border-bottom:2px solid #ffc107;color:#856404;}
     .banner.err{background:#ffe5e5;border-bottom:2px solid var(--red);color:var(--rd);}
   </style>
 </head>
 <body>
 <div id="root"></div>
 
+<!-- 魔法のおまじない（モジュール指定） -->
 <script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
 
@@ -159,18 +180,18 @@ async function gasPost(action, data) {
 // ─────────────────────────────────────────────────────────────
 //  localStorage 永続化
 // ─────────────────────────────────────────────────────────────
-const LS_EXPRS = "quiz-exprs-v3";
-const LS_TOTAL = "quiz-total-v3";
+const LS_EXPRS = "quiz-exprs-v5";
+const LS_TOTAL = "quiz-total-v5";
 function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 // ─────────────────────────────────────────────────────────────
-//  ダミーデータ（GAS未接続時のフォールバック）
+//  ダミーデータ（テスト用に1つを「正答率0%の苦手表現」に設定）
 // ─────────────────────────────────────────────────────────────
 const DUMMY = [
-  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",            exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
+  { id:1,  phrase:"break the ice",            meaning:"場を和ませる・打ち解けること",    example:"He told a joke to break the ice.",            exampleJa:"彼は場を和ませるために冗談を言った。",  url:"https://youtube.com", status:"学習中", attempts:1, correctCount:0 }, // 0% (苦手確定)
   { id:2,  phrase:"hit the nail on the head", meaning:"的を射る・ズバリ言い当てる",      example:"You hit the nail on the head.",               exampleJa:"まさにその通りです。",                 url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
-  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                     url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
+  { id:3,  phrase:"under the weather",        meaning:"体調が悪い・気分がすぐれない",    example:"I'm feeling under the weather today.",        exampleJa:"今日は体調が悪い。",                     url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 }, // 75% (ライティング確定)
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -192,7 +213,7 @@ function speakText(text, onEnd) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Quiz Generator（5種類・重複なし）
+//  Quiz Generator（ヒント遮断 ＋ 50%ライティング ＋ 苦手モード対応）
 // ─────────────────────────────────────────────────────────────
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
@@ -215,42 +236,61 @@ function blankify(sentence, phrase) {
 
 function generateQuiz(expression, all) {
   const others = all.filter(e => e.id !== expression.id);
+  const acc    = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
+  
   const types  = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
-  const type   = types[Math.floor(Math.random() * types.length)];
+  if (acc >= 50) types.push("writing"); // 50%以上でタイピング問題追加
+
+  const type = types[Math.floor(Math.random() * types.length)];
 
   if (type === "multiple_choice") {
     const correct = expression.meaning.split("・")[0].split("。")[0];
-    return { type, question:`"${expression.phrase}" の意味は？`,
-             subInfo:`例) ${expression.example}`,
-             options: buildOptions(correct, others.map(e=>e.meaning.split("・")[0].split("。")[0])),
-             answer: correct, expression };
+    return { 
+      type, question:`"${expression.phrase}" の意味は？`,
+      options: buildOptions(correct, others.map(e=>e.meaning.split("・")[0].split("。")[0])),
+      answer: correct, expression 
+    };
   }
   if (type === "fill_blank") {
     const words = expression.phrase.split(" ");
     const bi    = Math.floor(Math.random() * words.length);
-    return { type, question:"空欄に入る単語を選んでください",
-             phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
-             subInfo:`例) ${blankify(expression.example, expression.phrase)}`,
-             options: buildOptions(words[bi], others.flatMap(e=>e.phrase.split(" "))),
-             answer: words[bi], expression };
+    return { 
+      type, question:"空欄に入る単語を選んでください",
+      phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
+      subInfo:`💡 意味：${expression.meaning.split("。")[0]}`, // 例文ヒント完全遮断
+      options: buildOptions(words[bi], others.flatMap(e=>e.phrase.split(" "))),
+      answer: words[bi], expression 
+    };
   }
   if (type === "meaning_match") {
-    return { type, question:"次の意味に合う英語表現はどれ？",
-             meaningHint: expression.meaning.split("。")[0],
-             options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-             answer: expression.phrase, expression };
+    return { 
+      type, question:"次の意味に合う英語表現はどれ？",
+      meaningHint: expression.meaning.split("。")[0],
+      options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
+      answer: expression.phrase, expression 
+    };
   }
   if (type === "listening") {
-    return { type, question:"🎧 音声を聞いて、正しい英語表現を選んでください",
-             options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-             answer: expression.phrase, expression };
+    return { 
+      type, question:"🎧 音声を聞いて、正しい英語表現を選んでください",
+      options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
+      answer: expression.phrase, expression 
+    };
   }
-  // example_blank
-  return { type:"example_blank", question:"例文の【    】に入るフレーズは？",
-           exampleBlanked: blankify(expression.example, expression.phrase),
-           exampleJa: expression.exampleJa,
-           options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
-           answer: expression.phrase, expression };
+  if (type === "writing") {
+    return {
+      type, question:"✍️ 次の意味を表す英語フレーズをタイピングしてください",
+      meaningHint: expression.meaning.split("。")[0],
+      answer: expression.phrase, expression
+    };
+  }
+  return { 
+    type:"example_blank", question:"例文の【    】に入るフレーズは？",
+    exampleBlanked: blankify(expression.example, expression.phrase),
+    exampleJa: expression.exampleJa,
+    options: buildOptions(expression.phrase, others.map(e=>e.phrase)),
+    answer: expression.phrase, expression 
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -299,73 +339,6 @@ function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
         strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
         style={{transition:"stroke-dashoffset .7s ease"}}/>
     </svg>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  10問バッチ結果モーダル
-// ─────────────────────────────────────────────────────────────
-function BatchModal({ batch, expressions, onContinue }) {
-  const correctN = batch.filter(b=>b.correct).length;
-  const pct = Math.round(correctN/batch.length*100);
-  const [emoji,hl] = pct>=80?["🏆","素晴らしい！完璧に近い！"]:pct>=60?["🎯","いい調子！続けよう！"]:pct>=40?["💪","もう少し！頑張れ！"]:["📚","しっかり復習しよう！"];
-  const rc = pct>=60?"#58CC02":pct>=40?"#FFC800":"#FF4B4B";
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}}>
-      <div style={{background:"#fff",borderRadius:24,padding:"28px 22px 24px",width:"100%",maxWidth:430,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 28px 70px rgba(0,0,0,.35)"}}>
-        <div style={{textAlign:"center",marginBottom:20}}>
-          <div style={{fontSize:13,fontWeight:800,color:"#aaa",letterSpacing:".06em",textTransform:"uppercase",marginBottom:8}}>10問セット 結果</div>
-          <div style={{fontSize:44,margin:"4px 0"}}>{emoji}</div>
-          <div style={{fontSize:13,fontWeight:700,color:"#999",marginBottom:6}}>このセットの正答率</div>
-          <div style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center",margin:"4px 0 6px"}}>
-            <Ring pct={pct} size={108} stroke={9} color={rc}/>
-            <div style={{position:"absolute",textAlign:"center"}}>
-              <div style={{fontSize:26,fontWeight:900,color:"#2D2D2D",lineHeight:1}}>{pct}%</div>
-              <div style={{fontSize:11,fontWeight:700,color:"#bbb"}}>{correctN}/{batch.length}問</div>
-            </div>
-          </div>
-          <div style={{fontSize:19,fontWeight:900,color:rc,marginTop:4}}>{hl}</div>
-        </div>
-        <div style={{height:1,background:"#EFEFEF",margin:"0 0 18px"}}/>
-        <div style={{fontSize:12,fontWeight:800,color:"#bbb",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>今回の表現 ＆ 累計正答率</div>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {batch.map((b,i)=>{
-            const expr = expressions.find(e=>e.id===b.expressionId);
-            if(!expr) return null;
-            const cp = expr.attempts>0?Math.round(expr.correctCount/expr.attempts*100):0;
-            const cc = cp>=70?"#58CC02":cp>=40?"#FFC800":"#FF4B4B";
-            return (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,
-                background:b.correct?"#f3fff0":"#fff4f4",
-                border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,
-                borderRadius:14,padding:"10px 13px"}}>
-                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:18,flexShrink:0}}>
-                  {b.correct?<CheckIc/>:<CrossIc/>}
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:800,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{expr.phrase}</div>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#bbb",whiteSpace:"nowrap"}}>累計</div>
-                    <div style={{flex:1,height:5,background:"#E5E5E5",borderRadius:99,overflow:"hidden"}}>
-                      <div style={{height:"100%",width:`${cp}%`,background:cc,borderRadius:99}}/>
-                    </div>
-                    <div style={{fontSize:11,fontWeight:900,color:cc,minWidth:30,textAlign:"right"}}>{cp}%</div>
-                    <div style={{fontSize:10,color:"#ccc",whiteSpace:"nowrap"}}>({expr.attempts}回)</div>
-                  </div>
-                </div>
-                <div style={{position:"relative",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <Ring pct={cp} size={44} stroke={4} color={cc}/>
-                  <span style={{position:"absolute",fontSize:9,fontWeight:900,color:"#2D2D2D"}}>{cp}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <button onClick={onContinue} style={{marginTop:22,width:"100%",border:"none",borderRadius:16,padding:"16px",background:"#58CC02",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 0 #46a302"}}>
-          続ける →
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -433,7 +406,7 @@ const BATCH_SIZE = 10;
 function App() {
   const [loaded,        setLoaded]        = useState(false);
   const [gasError,      setGasError]      = useState(false);
-  const [tab,           setTab]           = useState("quiz");
+  const [tab,           setTab]           = useState("quiz"); // "quiz" | "weak" | "learned"
   const [exprs,         setExprs]         = useState([]);
   const [quiz,          setQuiz]          = useState(null);
   const [selected,      setSelected]      = useState(null);
@@ -443,9 +416,9 @@ function App() {
   const [confetti,      setConfetti]      = useState(false);
   const [toast,         setToast]         = useState({ msg:"", on:false });
   const [batch,         setBatch]         = useState([]);
-  const [showBatch,     setShowBatch]     = useState(false);
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [statusModal,   setStatusModal]   = useState(null);
+  const [inputVal,      setInputVal]      = useState("");
 
   const exprsRef = useRef(exprs);
   exprsRef.current = exprs;
@@ -477,13 +450,18 @@ function App() {
     if (exprs.length) lsSet(LS_EXPRS, exprs);
   }, [exprs]);
 
-  const pickQuiz = useCallback((list) => {
-    const pool = list.filter(e=>e.status!=="習得済み");
+  // ★ 変更：現在のタブ状態（通常 or 苦手）に応じて出題プールを分ける
+  const pickQuiz = useCallback((list, targetTab = tab) => {
+    const isW  = targetTab === "weak";
+    const pool = isW 
+      ? list.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7)
+      : list.filter(e => e.status !== "習得済み");
+
     if (!pool.length) { setQuiz(null); return; }
-    const expr = pool[Math.floor(Math.random()*pool.length)];
+    const expr = pool[Math.floor(Math.random() * pool.length)];
     setQuiz(generateQuiz(expr, list));
-    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false);
-  }, []);
+    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal("");
+  }, [tab]);
 
   function showToast(msg) {
     setToast({ msg, on:true });
@@ -492,7 +470,11 @@ function App() {
 
   function handleAnswer(option) {
     if (selected || !quiz) return;
-    const correct = option === quiz.answer;
+    const isWrite  = quiz.type === "writing";
+    const userAns  = isWrite ? option.trim().toLowerCase() : option;
+    const rightAns = isWrite ? quiz.answer.trim().toLowerCase() : quiz.answer;
+    const correct  = userAns === rightAns;
+
     setSelected(option); setIsCorrect(correct); setShowFB(true);
     if (correct) { setConfetti(true); setTimeout(()=>setConfetti(false),1300); }
 
@@ -509,20 +491,19 @@ function App() {
 
     const nb = [...batch, { expressionId:quiz.expression.id, correct }];
     const nt = totalAnswered+1;
-    setBatch(nb);
+    setBatch(nb.length > BATCH_SIZE ? nb.slice(-BATCH_SIZE) : nb); // 上部ドットは直近10問を維持
     setTotalAnswered(nt);
     lsSet(LS_TOTAL, nt);
-    if (nb.length>=BATCH_SIZE) setTimeout(()=>setShowBatch(true),500);
   }
 
-  function handleNext() { pickQuiz(exprsRef.current); }
+  function handleNext() { pickQuiz(exprsRef.current, tab); }
 
   function handleMastered() {
     const ne = exprs.map(e=>e.id===quiz.expression.id?{...e,status:"習得済み"}:e);
     setExprs(ne);
     showToast("⭐ 習得済みに登録しました！");
     gasPost("updateStatus",{phrase:quiz.expression.phrase,status:"習得済み"}).catch(()=>{});
-    pickQuiz(ne);
+    pickQuiz(ne, tab);
   }
 
   function handleRestore(id) {
@@ -532,8 +513,9 @@ function App() {
     if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
   }
 
-  function handleBatchContinue() {
-    setShowBatch(false); setBatch([]); pickQuiz(exprsRef.current);
+  function switchTab(newTab) {
+    setTab(newTab);
+    if (newTab === "quiz" || newTab === "weak") pickQuiz(exprsRef.current, newTab);
   }
 
   function handleSpeak() {
@@ -542,15 +524,15 @@ function App() {
     speakText(quiz.type==="example_blank"?quiz.expression.example:quiz.expression.phrase, ()=>setPlaying(false));
   }
 
-  const learned       = exprs.filter(e=>e.status==="習得済み");
-  const active        = exprs.filter(e=>e.status!=="習得済み");
-  const masteredN     = learned.length;
-  const learningN     = exprs.filter(e=>e.status==="学習中").length;
-  const unlearnedN    = exprs.filter(e=>e.status==="未学習").length;
-  const batchN        = batch.length;
-  const curExpr  = quiz?exprs.find(e=>e.id===quiz.expression.id):null;
-  const cumPct   = curExpr&&curExpr.attempts>0?Math.round(curExpr.correctCount/curExpr.attempts*100):null;
-  const cumColor = cumPct==null?"#ccc":cumPct>=70?"var(--green)":cumPct>=40?"var(--yellow)":"var(--red)";
+  const learned    = exprs.filter(e=>e.status==="習得済み");
+  const active     = exprs.filter(e=>e.status!=="習得済み");
+  const weakList   = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7); // ★苦手リスト
+  const masteredN  = learned.length;
+  const learningN  = exprs.filter(e=>e.status==="学習中").length;
+  const unlearnedN = exprs.filter(e=>e.status==="未学習").length;
+  const curExpr    = quiz?exprs.find(e=>e.id===quiz.expression.id):null;
+  const cumPct     = curExpr&&curExpr.attempts>0?Math.round(curExpr.correctCount/curExpr.attempts*100):null;
+  const cumColor   = cumPct==null?"#ccc":cumPct>=70?"var(--green)":cumPct>=40?"var(--yellow)":"var(--red)";
 
   if (!loaded) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:16,fontFamily:"'Nunito',sans-serif"}}>
@@ -563,75 +545,94 @@ function App() {
     <div className="app">
       <div className={`toast${toast.on?" on":""}`}>{toast.msg}</div>
       <Confetti show={confetti}/>
-      {showBatch&&<BatchModal batch={batch} expressions={exprs} onContinue={handleBatchContinue}/>}
       {statusModal&&<StatusListModal status={statusModal} expressions={exprs} onClose={()=>setStatusModal(null)}/>}
 
       {gasError&&<div className="banner err">❌ GAS接続エラー — キャッシュ/ダミーデータで動作中</div>}
 
       {/* Nav */}
       <nav className="nav">
-        <button className={`ntab${tab==="quiz"?" on":""}`} onClick={()=>setTab("quiz")}>
+        <button className={`ntab${tab==="quiz"?" on":""}`} onClick={()=>switchTab("quiz")}>
           <BookIc/> クイズ
         </button>
-        <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}>
+        
+        {/* ★ 新設：苦手克服タブ（赤バッジ付き） */}
+        <button className={`ntab${tab==="weak"?" on":""}`} onClick={()=>switchTab("weak")}>
+          <span style={{fontSize:13}}>⚠️ 苦手克服</span>
+          {weakList.length > 0 && <span className="badge-red">{weakList.length}</span>}
+        </button>
+
+        <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>switchTab("learned")}>
           <StarIc/> 習得済み
           {masteredN>0&&<span style={{background:"var(--yellow)",color:"#5a3f00",borderRadius:99,padding:"1px 7px",fontSize:11,fontWeight:900}}>{masteredN}</span>}
         </button>
       </nav>
 
-      {/* ═══ QUIZ TAB ══════════════════════════════════════════════ */}
-      {tab==="quiz"&&(
+      {/* ═══ QUIZ ＆ WEAK TAB（共通のクイズ描画エリア） ════════════ */}
+      {(tab==="quiz" || tab==="weak")&&(
         <div className="scroll">
           <div className="bdots">
             {Array.from({length:BATCH_SIZE},(_,i)=>{
-              const ans=batch[i]; let cls="bdot";
-              if(ans) cls+=ans.correct?" ok":" ng"; else if(i===batchN) cls+=" cur";
-              return <div key={i} className={cls}/>;
+              const ans = batch[i]; 
+              return <div key={i} className={`bdot${ans?(ans.correct?" ok":" ng"):""}`}/>;
             })}
           </div>
 
-          {active.length===0?(
+          {/* モードごとの「出題ゼロ」メッセージ */}
+          {tab==="weak" && weakList.length===0 ? (
+            <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px",textAlign:"center",gap:14}}>
+              <div style={{fontSize:56}}>✨</div>
+              <div style={{fontSize:20,fontWeight:900}}>苦手項目ゼロ！</div>
+              <div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>現在、正答率70%未満の表現はありません。<br/>素晴らしい定着率です！</div>
+            </div>
+          ) : tab==="quiz" && active.length===0 ? (
             <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px",textAlign:"center",gap:14}}>
               <div style={{fontSize:56}}>🎉</div>
               <div style={{fontSize:20,fontWeight:900}}>全部習得完了！</div>
               <div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>すべての表現を習得しました。<br/>「習得済み」タブから未学習に戻せます。</div>
             </div>
-          ):quiz?(
+          ) : quiz ? (
             <>
               <div className="qcard">
-                <div className={`qbadge ${quiz.type==="multiple_choice"?"mc":quiz.type==="fill_blank"?"fb":quiz.type==="meaning_match"?"mm":quiz.type==="listening"?"ls":"ex"}`}>
+                <div className={`qbadge ${quiz.type==="multiple_choice"?"mc":quiz.type==="fill_blank"?"fb":quiz.type==="meaning_match"?"mm":quiz.type==="listening"?"ls":quiz.type==="writing"?"wr":"ex"}`}>
                   {quiz.type==="multiple_choice"&&"✦ 選択クイズ"}
                   {quiz.type==="fill_blank"&&"✦ 穴埋めクイズ"}
                   {quiz.type==="meaning_match"&&"✦ 意味マッチング"}
                   {quiz.type==="listening"&&"🎧 リスニング"}
                   {quiz.type==="example_blank"&&"📝 例文穴埋め"}
+                  {quiz.type==="writing"&&"✍️ タイピング問題"}
                 </div>
+                
                 <div className="qquestion">{quiz.question}</div>
-                {quiz.type==="multiple_choice"&&<><div className="qphrase">"{quiz.expression.phrase}"</div><div className="sub-info">{quiz.subInfo}</div></>}
+                {quiz.type==="multiple_choice"&&<div className="qphrase">"{quiz.expression.phrase}"</div>}
                 {quiz.type==="fill_blank"&&<><div className="blank-box">{quiz.phrase}</div><div className="sub-info">{quiz.subInfo}</div></>}
                 {quiz.type==="meaning_match"&&<div className="mhint">💬 {quiz.meaningHint}</div>}
-                {quiz.type==="listening"&&(
-                  <button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}>
-                    <SpeakerIc/>{playing?"再生中…":"タップして音声を再生"}
-                  </button>
-                )}
-                {quiz.type==="example_blank"&&(
-                  <><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>
-                )}
+                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><SpeakerIc/>{playing?"再生中…":"タップして音声を再生"}</button>}
+                {quiz.type==="writing"&&<><div className="mhint" style={{fontSize:"18px",margin:"10px 0 6px",color:"#111"}}>💡 {quiz.meaningHint}</div><div style={{fontSize:"12px",color:"var(--muted)"}}>※フレーズ全体を正しく入力してください</div></>}
+                {quiz.type==="example_blank"&&<><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>}
               </div>
 
-              <div className="opts">
-                {quiz.options.map((opt,i)=>{
-                  let cls="opt";
-                  if(selected){ if(opt===quiz.answer) cls+=" ok"; else if(opt===selected) cls+=" ng"; }
-                  return <button key={i} className={cls} onClick={()=>handleAnswer(opt)} disabled={!!selected}>{opt}</button>;
-                })}
-              </div>
+              {quiz.type === "writing" ? (
+                <form className="write-form" onSubmit={e=>{ e.preventDefault(); if(inputVal.trim() && selected===null) handleAnswer(inputVal); }}>
+                  <input className="write-input" type="text" value={inputVal} onChange={e=>setInputVal(e.target.value)} disabled={selected!==null} placeholder="英語フレーズを入力..." autoFocus/>
+                  <button className="btn-submit-write" type="submit" disabled={selected!==null || !inputVal.trim()}>回答</button>
+                </form>
+              ) : (
+                <div className="opts">
+                  {quiz.options.map((opt,i)=>{
+                    let cls="opt";
+                    if(selected){ if(opt===quiz.answer) cls+=" ok"; else if(opt===selected) cls+=" ng"; }
+                    return <button key={i} className={cls} onClick={()=>handleAnswer(opt)} disabled={!!selected}>{opt}</button>;
+                  })}
+                </div>
+              )}
 
               {showFB&&(
                 <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
                   <div className="fdbk-ttl">{isCorrect?<><CheckIc/> 正解！素晴らしい！</>:<><CrossIc/> 不正解…</>}</div>
-                  <div className="fdbk-body"><strong>{quiz.expression.phrase}</strong><br/>{quiz.expression.meaning}</div>
+                  <div className="fdbk-body">
+                    {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong></span></> : <strong>{quiz.expression.phrase}</strong>}
+                    <br/>{quiz.expression.meaning}
+                  </div>
                   <div className="fdbk-ex">📖 {quiz.expression.example}<br/>🇯🇵 {quiz.expression.exampleJa}</div>
                   {curExpr&&curExpr.attempts>0&&(
                     <div className="cum-row">
@@ -645,12 +646,7 @@ function App() {
               )}
 
               <div className="btns">
-                {selected&&(
-                  <>
-                    <button className="btn btn-next" onClick={handleNext}>次の問題へ →</button>
-                    <button className="btn btn-master" onClick={handleMastered}><StarIc/> この表現はもう覚えた！</button>
-                  </>
-                )}
+                {selected&&<><button className="btn btn-next" onClick={handleNext}>次の問題へ →</button><button className="btn btn-master" onClick={handleMastered}><StarIc/> この表現はもう覚えた！</button></>}
                 <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><LinkIc/> ソース動画を見る</button>
               </div>
             </>
@@ -666,12 +662,7 @@ function App() {
             <div className="ll-sub">「戻す」で未学習に復元できます</div>
           </div>
           {learned.length===0?(
-            <div style={{padding:"60px 24px",textAlign:"center"}}>
-              <div style={{fontSize:48,marginBottom:14}}>🌱</div>
-              <div style={{fontSize:15,color:"var(--muted)",fontWeight:600,lineHeight:1.75}}>
-                まだ習得済みの表現がありません。<br/>クイズで「もう覚えた！」を押してみよう！
-              </div>
-            </div>
+            <div style={{padding:"60px 24px",textAlign:"center"}}><div style={{fontSize:48,marginBottom:14}}>🌱</div><div style={{fontSize:15,color:"var(--muted)",fontWeight:600,lineHeight:1.75}}>まだ習得済みの表現がありません。<br/>クイズで「もう覚えた！」を押してみよう！</div></div>
           ):(
             <div className="ll-list">
               {learned.map(expr=>{
@@ -680,17 +671,7 @@ function App() {
                 return (
                   <div key={expr.id} className="ll-item">
                     <div className="ll-icon"><StarIc/></div>
-                    <div className="ll-body">
-                      <div className="ll-phrase">{expr.phrase}</div>
-                      <div className="ll-meaning">{expr.meaning.split("。")[0]}</div>
-                      <div className="ll-ex">{expr.example}</div>
-                      <div className="ll-acc">
-                        <div style={{fontSize:10,fontWeight:700,color:"var(--muted)"}}>累計正答率</div>
-                        <div className="ll-bar-wrap"><div className="ll-bar" style={{width:`${cp}%`,background:bc}}/></div>
-                        <div style={{fontSize:11,fontWeight:900,color:bc}}>{cp}%</div>
-                        <div style={{fontSize:10,color:"var(--muted)"}}>({expr.attempts}回)</div>
-                      </div>
-                    </div>
+                    <div className="ll-body"><div className="ll-phrase">{expr.phrase}</div><div className="ll-meaning">{expr.meaning.split("。")[0]}</div><div className="ll-ex">{expr.example}</div><div className="ll-acc"><div style={{fontSize:10,fontWeight:700,color:"var(--muted)"}}>累計正答率</div><div className="ll-bar-wrap"><div className="ll-bar" style={{width:`${cp}%`,background:bc}}/></div><div style={{fontSize:11,fontWeight:900,color:bc}}>{cp}%</div><div style={{fontSize:10,color:"var(--muted)"}}>({expr.attempts}回)</div></div></div>
                     <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><RefreshIc/> 戻す</button>
                   </div>
                 );
@@ -702,22 +683,11 @@ function App() {
 
       {/* ═══ BOTTOM STATS BAR ════════════════════════════════════ */}
       <div className="stats-bar">
-        <div className="schip tap" onClick={()=>setStatusModal("学習中")}>
-          <div className="snum b">{learningN}</div>
-          <div className="slbl">学習中</div>
-          <div className="tap-hint">▲ 一覧</div>
-        </div>
+        <div className="schip tap" onClick={()=>setStatusModal("学習中")}><div className="snum b">{learningN}</div><div className="slbl">学習中</div><div className="tap-hint">▲ 一覧</div></div>
         <div className="sdiv"/>
-        <div className="schip tap" onClick={()=>setStatusModal("未学習")}>
-          <div className="snum m">{unlearnedN}</div>
-          <div className="slbl">未学習</div>
-          <div className="tap-hint">▲ 一覧</div>
-        </div>
+        <div className="schip tap" onClick={()=>setStatusModal("未学習")}><div className="snum m">{unlearnedN}</div><div className="slbl">未学習</div><div className="tap-hint">▲ 一覧</div></div>
         <div className="sdiv"/>
-        <div className="schip">
-          <div className="snum y">{totalAnswered}</div>
-          <div className="slbl">累計解答</div>
-        </div>
+        <div className="schip"><div className="snum y">{totalAnswered}</div><div className="slbl">累計解答</div></div>
       </div>
     </div>
   );
