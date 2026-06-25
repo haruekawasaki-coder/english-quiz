@@ -21,7 +21,7 @@
 
   <h1>🎵 効果音（SE）試聴ツール</h1>
   <p style="font-size: 14px; text-align: center; color: #666; margin-bottom: 20px;">
-    スマホのサイレントモードを解除して、ボタンを押してみてください。
+    ※iPhoneの場合は、必ず横のマナーモードスイッチを解除（音が出る状態）にしてください！
   </p>
 
   <div class="theme-card">
@@ -52,10 +52,20 @@
   </div>
 
   <script>
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let ctx; // 最初は空にしておく
+
+    // ボタンを押した瞬間にシステムを起動する関数
+    function initAudio() {
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+    }
 
     function createTone(freq, type, startTime, duration, volStart, volEnd) {
-      if (ctx.state === 'suspended') ctx.resume();
+      initAudio(); // 毎回確実に起動・再開させる
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type;
@@ -91,3 +101,26 @@
       createTone(250, 'sine', 0.15, 0.4, 0.15, 0.01);
     }
     function playMildNext() {
+      createTone(600, 'sine', 0, 0.2, 0.1, 0.01);
+    }
+    function playMildPt() {
+      createTone(440, 'sine', 0, 0.4, 0.1, 0.01);
+      createTone(554.37, 'sine', 0.15, 0.4, 0.1, 0.01);
+      createTone(659.25, 'sine', 0.3, 0.6, 0.1, 0.01);
+    }
+
+    // --- ③ 8-bitレトロ ---
+    function playRetroNg() {
+      createTone(100, 'sawtooth', 0, 0.3, 0.1, 0.01);
+    }
+    function playRetroNext() {
+      createTone(1200, 'square', 0, 0.05, 0.05, 0.01);
+      createTone(1600, 'square', 0.05, 0.1, 0.05, 0.01);
+    }
+    function playRetroPt() {
+      createTone(987.77, 'square', 0, 0.1, 0.05, 0.01);
+      createTone(1318.51, 'square', 0.1, 0.3, 0.05, 0.01);
+    }
+  </script>
+</body>
+</html>
