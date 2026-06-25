@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (分離フレーズ穴埋め対応版)</title>
+  <title>English Quiz (完全チューニング版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
-  <!-- Babelバグ回避のための安定版指定 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
@@ -162,7 +161,6 @@
 <body>
 <div id="root"></div>
 
-<!-- 魔法のおまじない（モジュール指定） -->
 <script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
 
@@ -188,8 +186,8 @@ async function gasPost(action, data) {
 // ─────────────────────────────────────────────────────────────
 //  localStorage 永続化
 // ─────────────────────────────────────────────────────────────
-const LS_EXPRS = "quiz-exprs-v5";
-const LS_TOTAL = "quiz-total-v5";
+const LS_EXPRS = "quiz-exprs-v6";
+const LS_TOTAL = "quiz-total-v6";
 function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
@@ -237,7 +235,7 @@ function MiniSpeaker({ text }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Quiz Generator（★修正：分離フレーズ対応の blankify）
+//  Quiz Generator（各機能の修正実装）
 // ─────────────────────────────────────────────────────────────
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
@@ -251,35 +249,52 @@ function buildOptions(correct, pool) {
   return shuffle(opts);
 }
 
-// ★修正：間に単語が挟まる熟語（take ~ for grantedなど）でもしっかり穴埋めできるように改良
+// ★修正1：「私（I）」の大文字をキープする小文字化ツール
+const formatOpt = (str) => {
+  let s = str.toLowerCase();
+  s = s.replace(/\bi\b/g, 'I');
+  s = s.replace(/\bi'm\b/g, "I'm");
+  s = s.replace(/\bi've\b/g, "I've");
+  s = s.replace(/\bi'll\b/g, "I'll");
+  s = s.replace(/\bi'd\b/g, "I'd");
+  return s;
+};
+
+// ★修正2：時制変化や離れたフレーズにも対応する強力な blankify
 function blankify(sentence, phrase) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   
-  // 1. 完全一致の置換（普通のフレーズ）
+  let result = sentence;
   const exactRegex = new RegExp(escapeRegExp(phrase), "i");
-  if (exactRegex.test(sentence)) {
-    return sentence.replace(exactRegex, "【    】");
+  if (exactRegex.test(result)) {
+    return result.replace(exactRegex, "【    】");
   }
   
-  // 2. フレーズが離れて配置されている場合（例: take your health for granted）
-  //    フレーズを単語ごとに分解し、例文の中にある一致する単語を個別に【 】に変える
   const words = phrase.split(/\s+/).filter(w => w.length > 0);
-  let result = sentence;
   let matchCount = 0;
   
   words.forEach(w => {
-    const wordRegex = new RegExp("\\b" + escapeRegExp(w) + "\\b", "ig");
+    let pat = escapeRegExp(w);
+    // 単語の語尾変化（s, ed, ingなど）を吸収するファジーマッチ
+    if (w.length > 2) {
+      if (w.endsWith('e')) {
+        pat = escapeRegExp(w.slice(0, -1)) + "(?:e|es|ed|ing)";
+      } else if (w.endsWith('y')) {
+        pat = escapeRegExp(w.slice(0, -1)) + "(?:y|ies|ied|ying)";
+      } else {
+        pat = escapeRegExp(w) + "(?:s|es|ed|ing|ning|ping|ting)?";
+      }
+    }
+    const wordRegex = new RegExp("\\b" + pat + "\\b", "ig");
     if (wordRegex.test(result)) {
       result = result.replace(wordRegex, "【 】");
       matchCount++;
     }
   });
   
-  // 3. 過去形などで1単語もマッチしなかった場合への最終保険
   if (matchCount === 0) {
     return "【    】 (※元の文: " + sentence + ")";
   }
-  
   return result;
 }
 
@@ -288,7 +303,8 @@ function generateQuiz(expression, all) {
   const acc    = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
   
   const types  = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
-  if (acc >= 50) types.push("writing");
+  // ★修正3：タイピング問題の出現条件を 60%以上に変更
+  if (acc >= 60) types.push("writing");
 
   const type = types[Math.floor(Math.random() * types.length)];
 
@@ -303,30 +319,30 @@ function generateQuiz(expression, all) {
   if (type === "fill_blank") {
     const words = expression.phrase.split(" ");
     const bi    = Math.floor(Math.random() * words.length);
-    const ansLow = words[bi].toLowerCase();
+    const ansFmt = formatOpt(words[bi]);
     return { 
       type, question:"空欄に入る単語を選んでください",
       phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "),
       subInfo:`💡 意味：${expression.meaning.split("。")[0]}`,
-      options: buildOptions(ansLow, others.flatMap(e=>e.phrase.split(" ").map(w=>w.toLowerCase()))),
-      answer: ansLow, expression 
+      options: buildOptions(ansFmt, others.flatMap(e=>e.phrase.split(" ").map(w=>formatOpt(w)))),
+      answer: ansFmt, expression 
     };
   }
   if (type === "meaning_match") {
-    const ansLow = expression.phrase.toLowerCase();
+    const ansFmt = formatOpt(expression.phrase);
     return { 
       type, question:"次の意味に合う英語表現はどれ？",
       meaningHint: expression.meaning.split("。")[0],
-      options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
-      answer: ansLow, expression 
+      options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))),
+      answer: ansFmt, expression 
     };
   }
   if (type === "listening") {
-    const ansLow = expression.phrase.toLowerCase();
+    const ansFmt = formatOpt(expression.phrase);
     return { 
       type, question:"🎧 音声を聞いて、正しい英語表現を選んでください",
-      options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
-      answer: ansLow, expression 
+      options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))),
+      answer: ansFmt, expression 
     };
   }
   if (type === "writing") {
@@ -336,14 +352,15 @@ function generateQuiz(expression, all) {
       answer: expression.phrase, expression
     };
   }
+  
   // example_blank
-  const ansLow = expression.phrase.toLowerCase();
+  const ansFmt = formatOpt(expression.phrase);
   return { 
     type:"example_blank", question:"例文の【    】に入るフレーズは？",
     exampleBlanked: blankify(expression.example, expression.phrase),
     exampleJa: expression.exampleJa,
-    options: buildOptions(ansLow, others.map(e=>e.phrase.toLowerCase())),
-    answer: ansLow, expression 
+    options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))),
+    answer: ansFmt, expression 
   };
 }
 
@@ -394,6 +411,73 @@ function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
         strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
         style={{transition:"stroke-dashoffset .7s ease"}}/>
     </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  10問バッチ結果モーダル
+// ─────────────────────────────────────────────────────────────
+function BatchModal({ batch, expressions, onContinue }) {
+  const correctN = batch.filter(b=>b.correct).length;
+  const pct = Math.round(correctN/batch.length*100);
+  const [emoji,hl] = pct>=80?["🏆","素晴らしい！完璧に近い！"]:pct>=60?["🎯","いい調子！続けよう！"]:pct>=40?["💪","もう少し！頑張れ！"]:["📚","しっかり復習しよう！"];
+  const rc = pct>=60?"#58CC02":pct>=40?"#FFC800":"#FF4B4B";
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}}>
+      <div style={{background:"#fff",borderRadius:24,padding:"28px 22px 24px",width:"100%",maxWidth:430,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 28px 70px rgba(0,0,0,.35)"}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:13,fontWeight:800,color:"#aaa",letterSpacing:".06em",textTransform:"uppercase",marginBottom:8}}>10問セット 結果</div>
+          <div style={{fontSize:44,margin:"4px 0"}}>{emoji}</div>
+          <div style={{fontSize:13,fontWeight:700,color:"#999",marginBottom:6}}>このセットの正答率</div>
+          <div style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center",margin:"4px 0 6px"}}>
+            <Ring pct={pct} size={108} stroke={9} color={rc}/>
+            <div style={{position:"absolute",textAlign:"center"}}>
+              <div style={{fontSize:26,fontWeight:900,color:"#2D2D2D",lineHeight:1}}>{pct}%</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#bbb"}}>{correctN}/{batch.length}問</div>
+            </div>
+          </div>
+          <div style={{fontSize:19,fontWeight:900,color:rc,marginTop:4}}>{hl}</div>
+        </div>
+        <div style={{height:1,background:"#EFEFEF",margin:"0 0 18px"}}/>
+        <div style={{fontSize:12,fontWeight:800,color:"#bbb",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>今回の表現 ＆ 累計正答率</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {batch.map((b,i)=>{
+            const expr = expressions.find(e=>e.id===b.expressionId);
+            if(!expr) return null;
+            const cp = expr.attempts>0?Math.round(expr.correctCount/expr.attempts*100):0;
+            const cc = cp>=70?"#58CC02":cp>=40?"#FFC800":"#FF4B4B";
+            return (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,
+                background:b.correct?"#f3fff0":"#fff4f4",
+                border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,
+                borderRadius:14,padding:"10px 13px"}}>
+                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:18,flexShrink:0}}>
+                  {b.correct?<CheckIc/>:<CrossIc/>}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:800,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{expr.phrase}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
+                    <div style={{fontSize:10,fontWeight:700,color:"#bbb",whiteSpace:"nowrap"}}>累計</div>
+                    <div style={{flex:1,height:5,background:"#E5E5E5",borderRadius:99,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${cp}%`,background:cc,borderRadius:99}}/>
+                    </div>
+                    <div style={{fontSize:11,fontWeight:900,color:cc,minWidth:30,textAlign:"right"}}>{cp}%</div>
+                    <div style={{fontSize:10,color:"#ccc",whiteSpace:"nowrap"}}>({expr.attempts}回)</div>
+                  </div>
+                </div>
+                <div style={{position:"relative",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <Ring pct={cp} size={44} stroke={4} color={cc}/>
+                  <span style={{position:"absolute",fontSize:9,fontWeight:900,color:"#2D2D2D"}}>{cp}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={onContinue} style={{marginTop:22,width:"100%",border:"none",borderRadius:16,padding:"16px",background:"#58CC02",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 0 #46a302"}}>
+          続ける →
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -471,6 +555,7 @@ function App() {
   const [confetti,      setConfetti]      = useState(false);
   const [toast,         setToast]         = useState({ msg:"", on:false });
   const [batch,         setBatch]         = useState([]);
+  const [showBatch,     setShowBatch]     = useState(false);
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [statusModal,   setStatusModal]   = useState(null);
   const [inputVal,      setInputVal]      = useState("");
@@ -545,9 +630,14 @@ function App() {
 
     const nb = [...batch, { expressionId:quiz.expression.id, correct }];
     const nt = totalAnswered+1;
-    setBatch(nb.length > BATCH_SIZE ? nb.slice(-BATCH_SIZE) : nb); 
+    setBatch(nb); // ★修正3: 10問でリセットするためのバッチ保存
     setTotalAnswered(nt);
     lsSet(LS_TOTAL, nt);
+    
+    // 10問溜まったら少し待ってから結果モーダルを表示
+    if (nb.length >= BATCH_SIZE) {
+      setTimeout(() => setShowBatch(true), 500);
+    }
   }
 
   function handleNext() { pickQuiz(exprsRef.current, tab); }
@@ -567,6 +657,13 @@ function App() {
     if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
   }
 
+  // ★10問終わった後のリセット処理
+  function handleBatchContinue() {
+    setShowBatch(false);
+    setBatch([]);
+    pickQuiz(exprsRef.current, tab);
+  }
+
   function switchTab(newTab) {
     setTab(newTab);
     if (newTab === "quiz" || newTab === "weak") pickQuiz(exprsRef.current, newTab);
@@ -584,7 +681,6 @@ function App() {
   const masteredN  = learned.length;
   const learningN  = exprs.filter(e=>e.status==="学習中").length;
   const unlearnedN = exprs.filter(e=>e.status==="未学習").length;
-  const batchN     = batch.length;
   const curExpr    = quiz?exprs.find(e=>e.id===quiz.expression.id):null;
   const cumPct     = curExpr&&curExpr.attempts>0?Math.round(curExpr.correctCount/curExpr.attempts*100):null;
   const cumColor   = cumPct==null?"#ccc":cumPct>=70?"var(--green)":cumPct>=40?"var(--yellow)":"var(--red)";
@@ -600,6 +696,10 @@ function App() {
     <div className="app">
       <div className={`toast${toast.on?" on":""}`}>{toast.msg}</div>
       <Confetti show={confetti}/>
+      
+      {/* ★10問結果モーダル */}
+      {showBatch&&<BatchModal batch={batch} expressions={exprs} onContinue={handleBatchContinue}/>}
+      
       {statusModal&&<StatusListModal status={statusModal} expressions={exprs} onClose={()=>setStatusModal(null)}/>}
 
       {gasError&&<div className="banner err">❌ GAS接続エラー — キャッシュ/ダミーデータで動作中</div>}
@@ -609,12 +709,10 @@ function App() {
         <button className={`ntab${tab==="quiz"?" on":""}`} onClick={()=>switchTab("quiz")}>
           <BookIc/> クイズ
         </button>
-        
         <button className={`ntab${tab==="weak"?" on":""}`} onClick={()=>switchTab("weak")}>
           <span style={{fontSize:13}}>⚠️ 苦手克服</span>
           {weakList.length > 0 && <span className="badge-red">{weakList.length}</span>}
         </button>
-
         <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>switchTab("learned")}>
           <StarIc/> 習得済み
           {masteredN>0&&<span style={{background:"var(--yellow)",color:"#5a3f00",borderRadius:99,padding:"1px 7px",fontSize:11,fontWeight:900}}>{masteredN}</span>}
