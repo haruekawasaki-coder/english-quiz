@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (タイピング判定改良版)</title>
+  <title>English Quiz (完全版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -112,6 +112,13 @@
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
     .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
     .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
+    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
+    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
+    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
+    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
+    .cum-count{font-size:10px;color:var(--muted);}
+    @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     
     /* Buttons */
     .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
@@ -183,7 +190,6 @@ const DUMMY = [
   { id:3, phrase:"live paycheck to paycheck", meaning:"給料から給料まで生活する", example:"Many families are living paycheck to paycheck.", exampleJa:"多くの家庭がカツカツで生活している。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
-// いーすとけん。データ
 const YEASTKENS = [
   { name: "しばこっぺ", icon: "🍞🐕", msg: "ふかふかに焼けたね！完璧だワン！" },
   { name: "さもめろん", icon: "🍈🐕", msg: "もふもふ！あま～い大正解！" },
@@ -207,7 +213,31 @@ function speakText(text, onEnd) {
   window.speechSynthesis.getVoices().length ? go() : (window.speechSynthesis.onvoiceschanged = go);
 }
 
-function MiniSpeaker({ text }) {
+// Icons
+const CheckIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="20 6 9 17 4 12"/></svg>;
+const CrossIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const StarIc    = () => <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"1em",height:"1em"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+const MapIc     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>;
+const AlertIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+const LinkIc    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
+const SpeakerIc = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
+const SearchIc  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+
+// ★確実なコンポーネント定義
+const Confetti = ({ show }) => {
+  if (!show) return null;
+  const C = ["#58CC02","#FFC800","#1CB0F6","#CE82FF","#FF4B4B","#FF9600"];
+  const dots = Array.from({length:28},(_,i)=>({
+    id:i, color:C[i%C.length], left:Math.random()*100, top:Math.random()*35+5, w:Math.random()*10+4, h:Math.random()*14+5, delay:Math.random()*0.5
+  }));
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9998,overflow:"hidden"}}>
+      {dots.map(d=>(<div key={d.id} style={{position:"absolute",left:`${d.left}%`,top:`${d.top}%`,width:d.w,height:d.h,background:d.color,borderRadius:2,animation:`cfFall 1.1s ease-in ${d.delay}s forwards`}}/>))}
+    </div>
+  );
+};
+
+const MiniSpeaker = ({ text }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -220,7 +250,7 @@ function MiniSpeaker({ text }) {
       <SpeakerIc style={{width:"1em",height:"1em"}}/>
     </span>
   );
-}
+};
 
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
@@ -234,7 +264,6 @@ function buildOptions(correct, pool) {
   return shuffle(opts);
 }
 
-// 私(I)の大文字キープ
 const formatOpt = (str) => {
   let s = str.toLowerCase();
   s = s.replace(/\bi\b/g, 'I');
@@ -245,7 +274,6 @@ const formatOpt = (str) => {
   return s;
 };
 
-// 分離フレーズ対応・語形変化対応
 function blankify(sentence, phrase) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   let result = sentence;
@@ -307,17 +335,18 @@ function generateQuiz(expression, all) {
   return { type:"example_blank", question:"例文の【    】に入るフレーズは？", exampleBlanked: blankify(expression.example, expression.phrase), exampleJa: expression.exampleJa, options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), answer: ansFmt, expression };
 }
 
-// Icons
-const CheckIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="20 6 9 17 4 12"/></svg>;
-const CrossIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const StarIc    = () => <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"1em",height:"1em"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const MapIc     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>;
-const AlertIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-const LinkIc    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
-const SpeakerIc = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
-const SearchIc  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
+  const r=size/2-stroke, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
+  return (
+    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E5E5" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
+        style={{transition:"stroke-dashoffset .7s ease"}}/>
+    </svg>
+  );
+}
 
-// ★ 10問完了時のリザルトモーダル（いーすとけん。付き）
 function BatchModal({ batch, expressions, onContinue }) {
   const correctN = batch.filter(b=>b.correct).length;
   const pointsEarned = 20 + (correctN * 2);
@@ -363,6 +392,59 @@ function BatchModal({ batch, expressions, onContinue }) {
       <button onClick={() => onContinue(pointsEarned)} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
         マップへ戻る
       </button>
+    </div>
+  );
+}
+
+function StatusListModal({ status, expressions, onClose }) {
+  const list = expressions.filter(e=>e.status===status);
+  const isL  = status==="学習中";
+  const ac   = isL?"#1CB0F6":"#888";
+  const bg   = isL?"#ddeeff":"#f0f0f0";
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:8000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#fff",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:480,maxHeight:"80vh",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
+        <div style={{padding:"20px 20px 12px",borderBottom:"1px solid #EFEFEF",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{background:bg,color:ac,fontWeight:800,fontSize:12,borderRadius:99,padding:"2px 12px"}}>{status}</span>
+              <span style={{fontSize:20,fontWeight:900,color:"#2D2D2D"}}>{list.length}件</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{border:"none",background:"#f0f0f0",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#888"}}>
+            <CloseIc/>
+          </button>
+        </div>
+        <div style={{overflowY:"auto",padding:"12px 16px 40px",display:"flex",flexDirection:"column",gap:8}}>
+          {list.length===0
+            ? <div style={{textAlign:"center",padding:"40px",color:"#aaa",fontSize:14}}>{status}の表現はありません</div>
+            : list.map(expr=>{
+              const cp = expr.attempts>0?Math.round(expr.correctCount/expr.attempts*100):null;
+              const cc = cp==null?"#ccc":cp>=70?"#58CC02":cp>=40?"#FFC800":"#FF4B4B";
+              return (
+                <div key={expr.id} style={{background:"#fff",border:"2px solid #EFEFEF",borderRadius:14,padding:"12px 14px"}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:15,fontWeight:800}}>{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
+                      <div style={{fontSize:12,color:"#888",marginTop:3,lineHeight:1.5}}>{expr.meaning.split("。")[0]}</div>
+                      <div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:3}}>{expr.example}</div>
+                    </div>
+                    {cp!==null&&(
+                      <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                        <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          <Ring pct={cp} size={40} stroke={4} color={cc}/>
+                          <span style={{position:"absolute",fontSize:9,fontWeight:900,color:"#2D2D2D"}}>{cp}%</span>
+                        </div>
+                        <div style={{fontSize:9,color:"#bbb"}}>{expr.attempts}回</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
     </div>
   );
 }
@@ -439,7 +521,7 @@ function App() {
     if (selected || !quiz) return;
     const isWrite  = quiz.type === "writing";
     
-    // ★修正: ピリオドやカンマなどの記号を除去して比較
+    // ピリオドやカンマなどの記号を除去して比較
     const normalize = (str) => str.replace(/[.,?!]/g, '').trim().toLowerCase();
     
     const userAns  = isWrite ? normalize(option) : option.toLowerCase();
