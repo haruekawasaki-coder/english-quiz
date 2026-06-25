@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (音量アップ＆円グラフ＆中断確認版)</title>
+  <title>English Quiz (SE強制アンロック対応版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -53,7 +53,7 @@
     @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
 
     /* Batch dots */
-    .bdots{display:flex;gap:6px;justify-content:center;padding:10px 16px 4px;}
+    .bdots{display:flex;gap:6px;justify-content:center;padding:18px 16px 4px;}
     .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
     .bdot.ng{background:var(--red);}
@@ -92,7 +92,6 @@
     @media(hover:hover)and(pointer:fine){.opt:hover:not(:disabled):not(.ok):not(.ng){border-color:var(--blue);background:#f0faff;}}
     .opt.ok{border-color:var(--green)!important;background:var(--gpale)!important;color:var(--gd)!important;box-shadow:0 3px 0 var(--gd)!important;}
     .opt.ng{border-color:var(--red)!important;background:#ffe5e5!important;color:var(--rd)!important;box-shadow:0 3px 0 var(--rd)!important;animation:shake .3s;}
-    .opt.locked{background:#f9f9f9!important;border-color:#eee!important;color:#ccc!important;box-shadow:none!important;cursor:default;}
     .opt:disabled{cursor:default;}
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
     
@@ -114,6 +113,12 @@
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
     .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
     .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
+    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
+    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
+    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
+    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
+    .cum-count{font-size:10px;color:var(--muted);}
     @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     
     /* Buttons */
@@ -170,9 +175,9 @@ async function gasPost(action, data) {
   return res.json();
 }
 
-const LS_EXPRS  = "quiz-exprs-v12";
-const LS_STAGE  = "quiz-stage-v12";
-const LS_POINTS = "quiz-points-v12";
+const LS_EXPRS  = "quiz-exprs-v11";
+const LS_STAGE  = "quiz-stage-v11";
+const LS_POINTS = "quiz-points-v11";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -191,23 +196,32 @@ const YEASTKENS = [
   { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
 ];
 
-let audioCtx = null;
+// ==========================================
+// ★ SE・オーディオ基盤（iPhone無音ブロック完全回避版）
+// ==========================================
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
+  if (!window.quizAudioCtx) {
+    window.quizAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (window.quizAudioCtx.state === 'suspended') {
+    window.quizAudioCtx.resume();
+  }
+  return window.quizAudioCtx;
 }
 
+// iPhoneのブラウザ制限を解除するための「初回タップ時の無音再生」
 function unlockAudio() {
   try {
     const ctx = initAudio();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    gain.gain.value = 0;
+    gain.gain.value = 0; // 完全な無音
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(0);
     osc.stop(ctx.currentTime + 0.001);
+    
+    // 一度解除したら不要なのでリスナーを消す
     document.removeEventListener('pointerdown', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
   } catch(e) {}
@@ -265,7 +279,7 @@ function playMetallicTone(freq, startTime, duration) {
   } catch(e) {}
 }
 
-// 💰 Pt獲得
+// 💰 Pt獲得：チャリーン！(硬貨2枚重ね)
 function playPtSE() {
   if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
   playMetallicTone(2000, 0, 0.4);
@@ -276,24 +290,27 @@ function playPtSE() {
   playMetallicTone(2200 * 5.4, 0.06, 0.2);
 }
 
-// ❌ 不正解
+// ❌ 不正解：ポロン（ずらして和音）
 function playNgSE() {
   createTone(350, 'sine', 0, 0.1, 0.3, 0.001);
   createTone(200, 'sine', 0.03, 0.1, 0.3, 0.001);
 }
 
-// ⭕ 正解
+// ⭕ 正解時：ティロン↑（パキッとしたポップ）
 function playOkSE() {
   createTone(880, 'triangle', 0, 0.08, 0.15, 0.01);
   createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
 }
 
-// ⏩ 次へ・覚えたボタン ★修正点: volStartを0.1から0.35に引き上げて大音量化
+// ⏩ 次へ・覚えたボタン：スライド上昇（ピュイッ、0.1秒）
 function playNextSE() {
   if (navigator.vibrate) navigator.vibrate([30]);
-  createSlideTone(400, 800, 'sine', 0, 0.1, 0.35, 0.001);
+  createSlideTone(400, 800, 'sine', 0, 0.1, 0.1, 0.001);
 }
 
+// ==========================================
+// 音声合成 (SpeechSynthesis)
+// ==========================================
 function speakText(text, onEnd) {
   if (!window.speechSynthesis) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
@@ -374,6 +391,7 @@ const formatOpt = (str) => {
   return s;
 };
 
+// 賢いフレーズ抽出
 function extractDynamicPhrase(phrase, sentence) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const getFuzzyPat = (w) => {
@@ -472,6 +490,18 @@ function generateQuiz(expression, all) {
   };
 }
 
+function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
+  const r=size/2-stroke, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
+  return (
+    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E5E5" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
+        style={{transition:"stroke-dashoffset .7s ease"}}/>
+    </svg>
+  );
+}
+
 function BatchModal({ batch, expressions, onContinue }) {
   const correctN = batch.filter(b=>b.correct).length;
   const pointsEarned = 20 + (correctN * 2);
@@ -487,7 +517,6 @@ function BatchModal({ batch, expressions, onContinue }) {
     <div style={{position:"fixed",inset:0,background:"#fff",zIndex:9000,display:"flex",flexDirection:"column",padding:24,overflowY:"auto"}}>
       <div style={{textAlign:"center",marginTop:20}}>
         <div style={{fontSize:20,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
-        
         <img 
           src={yeastken.iconUrl} 
           className="yeastken-img"
@@ -495,7 +524,6 @@ function BatchModal({ batch, expressions, onContinue }) {
           onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }}
         />
         <div style={{fontSize:64,margin:"10px 0",display:"none"}}>{yeastken.fallback}</div>
-        
         <div style={{fontSize:18,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
         <div style={{fontSize:14,fontWeight:700,color:"var(--muted)",marginTop:6}}>「{yeastken.msg}」</div>
       </div>
@@ -519,13 +547,9 @@ function BatchModal({ batch, expressions, onContinue }) {
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontWeight:800,fontSize:15,color:"#222"}}>{expr.phrase}</div>
                   <div style={{fontSize:12,color:"#888",marginTop:4}}>
-                    累計: {expr.correctCount} / {expr.attempts}回正解
+                    正答率: <strong style={{color:cp>=70?"var(--green)":cp>=40?"var(--yellow)":"var(--red)"}}>{cp}%</strong> 
+                    <span style={{marginLeft:6}}>({expr.correctCount} / {expr.attempts}回正解)</span>
                   </div>
-                </div>
-                {/* ★修正点: 正答率を円グラフ（リングメーター）形式で美しく表示 */}
-                <div style={{flexShrink:0, position:"relative", display:"flex", alignItems:"center", justifyContent:"center"}}>
-                  <Ring pct={cp} size={42} stroke={4} color={cp>=70?"var(--green)":cp>=40?"var(--yellow)":"var(--red)"}/>
-                  <span style={{position:"absolute", fontSize:"10px", fontWeight:900, color:"#2D2D2D"}}>{cp}%</span>
                 </div>
               </div>
             );
@@ -617,6 +641,7 @@ function App() {
   exprsRef.current = exprs;
 
   useEffect(() => {
+    // ★ iPhoneの「無音ブロック」を解除するための仕組み
     document.addEventListener('pointerdown', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
 
@@ -680,14 +705,15 @@ function App() {
     const correct  = userAns === rightAns;
 
     if (correct) {
-      playOkSE();
+      playOkSE(); // ★ 先にSEを鳴らす
       const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
       if (!isJapanese) {
+        // ★ SEと重なって消されるのを防ぐため、0.2秒待ってから発音
         setTimeout(() => speakText(option), 200);
       }
       setConfetti(true); setTimeout(()=>setConfetti(false),1300);
     } else {
-      playNgSE();
+      playNgSE(); // ★ 不正解時のポロン
     }
 
     setSelected(option); setIsCorrect(correct); setShowFB(true);
@@ -704,20 +730,12 @@ function App() {
   }
 
   function handleNext() {
-    playNextSE();
+    playNextSE(); // 次へのピュイッ
     
     if (batch.length >= BATCH_SIZE) {
       setShowBatch(true);
     } else {
       pickQuiz(exprsRef.current, tab);
-    }
-  }
-
-  // ★修正点: 問題を解いている最中に中断してホームに戻る機能（確認ポップアップ付き）
-  function handleQuitQuiz() {
-    if (window.confirm("本当に中断してホームに戻りますか？\n（このセットの途中の進捗はリセットされます）")) {
-      setBatch([]);
-      setTab(tab === "weak_quiz" ? "weak_home" : "home");
     }
   }
 
@@ -739,7 +757,7 @@ function App() {
   }
 
   function handleMastered() {
-    playNextSE();
+    playNextSE(); // 覚えたボタンもピュイッ
     
     const ne = exprs.map(e=>e.id===quiz.expression.id?{...e,status:"習得済み"}:e);
     setExprs(ne);
@@ -748,6 +766,13 @@ function App() {
     
     if (batch.length >= BATCH_SIZE) setShowBatch(true);
     else pickQuiz(ne, tab);
+  }
+
+  function handleRestore(id) {
+    const target = exprs.find(e=>e.id===id);
+    setExprs(prev=>prev.map(e=>e.id===id?{...e,status:"未学習"}:e));
+    showToast("↩ 未学習に戻しました");
+    if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
   }
 
   function handleSpeak() {
@@ -879,20 +904,11 @@ function App() {
       {/* ═══ QUIZ ＆ WEAK TAB ════════════ */}
       {(tab==="quiz" || tab==="weak_quiz")&&(
         <div className="scroll" style={{paddingBottom: 40}}>
-          
-          {/* ★修正点: クイズ画面最上部に「中断して戻る(✕)」ボタンを設置 */}
-          <div style={{display:"flex", alignItems:"center", padding:"10px 16px 0", position:"relative"}}>
-            <button onPointerDown={handleQuitQuiz} style={{background:"#eee", border:"none", borderRadius:"50%", width:"32px", height:"32px", cursor:"pointer", color:"var(--muted)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10, webkitTapHighlight-color:"transparent"}}>
-              <Icons.Close style={{fontSize:"16px"}}/>
-            </button>
-            <div style={{position:"absolute", left:0, right:0, display:"flex", justifyContent:"center"}}>
-              <div className="bdots">
-                {Array.from({length:BATCH_SIZE},(_,i)=>{
-                  const ans = batch[i]; 
-                  return <div key={i} className={`bdot${ans?(ans.correct?" ok":" ng"):""}`}/>;
-                })}
-              </div>
-            </div>
+          <div className="bdots">
+            {Array.from({length:BATCH_SIZE},(_,i)=>{
+              const ans = batch[i]; 
+              return <div key={i} className={`bdot${ans?(ans.correct?" ok":" ng"):""}`}/>;
+            })}
           </div>
 
           {quiz ? (
