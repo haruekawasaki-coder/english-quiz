@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (SE＆フレーズ抽出 強化版)</title>
+  <title>English Quiz (振動＆成績表示フル搭載版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -25,7 +25,7 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
     
-    /* Header */
+    /* Header (ポイント等) */
     .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;}
     .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
     
@@ -81,6 +81,7 @@
     .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
     @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
+
     .mini-speak{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e5f6fd;color:var(--bd);border:1px solid #b3e5fc;cursor:pointer;margin-left:8px;vertical-align:middle;transition:background .2s, transform .1s;}
     .mini-speak:active{transform:scale(0.9);}
     .mini-speak.playing{background:var(--blue);color:#fff;animation:spin 1.5s linear infinite;}
@@ -112,13 +113,6 @@
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
     .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
     .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
-    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
-    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
-    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
-    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
-    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
-    .cum-count{font-size:10px;color:var(--muted);}
-    @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     
     /* Buttons */
     .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
@@ -129,6 +123,7 @@
     .btn-result:active{transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
     .btn-master{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);}
     .btn-master:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
+    
     .btn-link-wrap{display:flex;gap:8px;}
     .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
     
@@ -194,9 +189,10 @@ const YEASTKENS = [
   { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
 ];
 
-// ★ SE再生関数
+// ★ SE・バイブレーション再生関数（チャリン音＋ブルッ）
 function playChime() {
   try {
+    if (navigator.vibrate) navigator.vibrate([60, 50, 60]); // ブルッ、ブルッ
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
@@ -213,8 +209,8 @@ function playChime() {
       osc.start(ctx.currentTime + startTime);
       osc.stop(ctx.currentTime + startTime + duration);
     };
-    playTone(987.77, 0, 0.3); // B5
-    playTone(1318.51, 0.1, 0.5); // E6
+    playTone(987.77, 0, 0.3); // B5 (チャ)
+    playTone(1318.51, 0.1, 0.5); // E6 (リン♪)
   } catch(e) {}
 }
 
@@ -243,9 +239,7 @@ const Icons = {
   Alert:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   Link:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   Speaker: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
-  Close:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.1em",height:"1.1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>
+  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 };
 
 const Confetti = ({ show }) => {
@@ -288,7 +282,6 @@ function buildOptions(correct, pool) {
   return shuffle(opts);
 }
 
-// ★「I（私）」の大文字キープ
 const formatOpt = (str) => {
   let s = str.toLowerCase();
   s = s.replace(/\bi\b/g, 'I');
@@ -299,7 +292,6 @@ const formatOpt = (str) => {
   return s;
 };
 
-// ★ 新・フレーズ抽出プログラム（離れた単語や変化した動詞も一発で特定）
 function extractDynamicPhrase(phrase, sentence) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const getFuzzyPat = (w) => {
@@ -360,7 +352,7 @@ function generateQuiz(expression, all) {
   const acc = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
   const types = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
   
-  if (acc >= 60) types.push("writing"); // 60%以上でタイピング解放
+  if (acc >= 60) types.push("writing");
 
   const type = types[Math.floor(Math.random() * types.length)];
 
@@ -386,13 +378,12 @@ function generateQuiz(expression, all) {
     return { type, question:"✍️ 次の意味を表す英語フレーズをタイピングしてください", meaningHint: expression.meaning.split("。")[0], answer: expression.phrase, expression };
   }
   
-  // ★ 例文穴埋め：賢い抽出で完全一致させる
+  // ★例文穴埋め：離れた単語も丸ごと１つの【 】に置き換え
   const dynPhrase = extractDynamicPhrase(expression.phrase, expression.example);
   const ansFmt = formatOpt(dynPhrase);
   const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const blanked = expression.example.replace(new RegExp(escapeRegExp(dynPhrase), "i"), "【    】");
   
-  // ダミーの選択肢も、ダミー例文から抽出できればするが、重いのでフレーズをそのままフォーマットする
   return { 
     type:"example_blank", 
     question:"例文の【    】に入るフレーズは？", 
@@ -402,18 +393,6 @@ function generateQuiz(expression, all) {
     answer: ansFmt, 
     expression 
   };
-}
-
-function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
-  const r=size/2-stroke, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
-  return (
-    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E5E5" strokeWidth={stroke}/>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
-        style={{transition:"stroke-dashoffset .7s ease"}}/>
-    </svg>
-  );
 }
 
 function BatchModal({ batch, expressions, onContinue }) {
@@ -431,15 +410,8 @@ function BatchModal({ batch, expressions, onContinue }) {
     <div style={{position:"fixed",inset:0,background:"#fff",zIndex:9000,display:"flex",flexDirection:"column",padding:24,overflowY:"auto"}}>
       <div style={{textAlign:"center",marginTop:20}}>
         <div style={{fontSize:20,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
-        
-        <img 
-          src={yeastken.iconUrl} 
-          className="yeastken-img"
-          alt={yeastken.name}
-          onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }}
-        />
+        <img src={yeastken.iconUrl} className="yeastken-img" alt={yeastken.name} onError={(e)=>{e.target.style.display='none';e.target.nextSibling.style.display='block';}} />
         <div style={{fontSize:64,margin:"10px 0",display:"none"}}>{yeastken.fallback}</div>
-        
         <div style={{fontSize:18,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
         <div style={{fontSize:14,fontWeight:700,color:"var(--muted)",marginTop:6}}>「{yeastken.msg}」</div>
       </div>
@@ -456,16 +428,25 @@ function BatchModal({ batch, expressions, onContinue }) {
           {batch.map((b,i)=>{
             const expr = expressions.find(e=>e.id===b.expressionId);
             if(!expr) return null;
+            const cp = expr.attempts > 0 ? Math.round((expr.correctCount / expr.attempts) * 100) : 0;
             return (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:b.correct?"#f3fff0":"#fff4f4",border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,borderRadius:12,padding:"10px 12px"}}>
-                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:18,flexShrink:0}}>{b.correct?<Icons.Check/>:<Icons.Cross/>}</div>
-                <div style={{flex:1,fontWeight:800,fontSize:14}}>{expr.phrase}</div>
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:b.correct?"#f3fff0":"#fff4f4",border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,borderRadius:12,padding:"12px"}}>
+                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:20,flexShrink:0}}>{b.correct?<Icons.Check/>:<Icons.Cross/>}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:800,fontSize:15,color:"#222"}}>{expr.phrase}</div>
+                  {/* ★ 追加機能：各フレーズの成績詳細を表示 */}
+                  <div style={{fontSize:12,color:"#888",marginTop:4}}>
+                    正答率: <strong style={{color:cp>=70?"var(--green)":cp>=40?"var(--yellow)":"var(--red)"}}>{cp}%</strong> 
+                    <span style={{marginLeft:6}}>({expr.correctCount} / {expr.attempts}回正解)</span>
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* ★ チャリン音＋振動を鳴らしてマップへ戻る */}
       <button onClick={() => { playChime(); onContinue(pointsEarned); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
         {pointsEarned}ptゲットしてマップに戻る
       </button>
@@ -543,7 +524,12 @@ function App() {
 
   function handleAnswer(option) {
     if (selected || !quiz) return;
-    speakText(option);
+    
+    // ★ 修正点：日本語が含まれていたら音声を再生しない（ミュート）
+    const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
+    if (!isJapanese) {
+      speakText(option);
+    }
 
     const isWrite  = quiz.type === "writing";
     const normalize = (str) => str.replace(/[.,?!]/g, '').trim().toLowerCase();
@@ -574,6 +560,7 @@ function App() {
     }
   }
 
+  // ★ 10問完了後、自動で次のステージ（normalStage + 1）に進行する
   function handleBatchContinue(earnedPts) {
     const newPts = points + earnedPts;
     setPoints(newPts);
@@ -599,13 +586,6 @@ function App() {
     
     if (batch.length >= BATCH_SIZE) setShowBatch(true);
     else pickQuiz(ne, tab);
-  }
-
-  function handleRestore(id) {
-    const target = exprs.find(e=>e.id===id);
-    setExprs(prev=>prev.map(e=>e.id===id?{...e,status:"未学習"}:e));
-    showToast("↩ 未学習に戻しました");
-    if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
   }
 
   function handleSpeak() {
@@ -665,10 +645,11 @@ function App() {
           
           <div className="map-path">
             <div className="map-line">
-              <div className="map-line-fill" style={{height:`100%`}}/>
+              <div className="map-line-fill" style={{height: normalStage === 1 ? "0%" : "25%"}}/>
             </div>
             {[...Array(5)].map((_, i) => {
-              const nodeStage = normalStage + 4 - i;
+              // ステージが1の時は一番下が1になるように、それ以降は自分が下から2番目になるように調整
+              const nodeStage = normalStage === 1 ? i + 1 : normalStage - 1 + i;
               const isCurrent = nodeStage === normalStage;
               const isCleared = nodeStage < normalStage;
               const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
