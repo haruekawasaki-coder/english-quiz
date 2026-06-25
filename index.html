@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (振動＆成績表示フル搭載版)</title>
+  <title>English Quiz (SE＆振動 フィードバック強化版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -25,7 +25,7 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
     
-    /* Header (ポイント等) */
+    /* Header */
     .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;}
     .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
     
@@ -76,12 +76,13 @@
     .ex-sentence{margin-top:6px;padding:12px 14px;background:#fff5f0;border:2px solid #ffd6c0;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;}
     .ex-ja{margin-top:5px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.55;}
     
-    /* Speaker Main & Mini */
+    /* Speaker */
     .speak-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 0;width:85%;padding:16px;border:3px solid var(--yellow);border-radius:var(--r);background:#fffbf0;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;color:#8a6200;box-shadow:0 4px 0 var(--yd);-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s;}
     .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
     @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
 
+    /* Mini Speaker */
     .mini-speak{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e5f6fd;color:var(--bd);border:1px solid #b3e5fc;cursor:pointer;margin-left:8px;vertical-align:middle;transition:background .2s, transform .1s;}
     .mini-speak:active{transform:scale(0.9);}
     .mini-speak.playing{background:var(--blue);color:#fff;animation:spin 1.5s linear infinite;}
@@ -113,6 +114,13 @@
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
     .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
     .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
+    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
+    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
+    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
+    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
+    .cum-count{font-size:10px;color:var(--muted);}
+    @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     
     /* Buttons */
     .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
@@ -189,7 +197,7 @@ const YEASTKENS = [
   { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
 ];
 
-// ★ SE・バイブレーション再生関数（チャリン音＋ブルッ）
+// ★ SE・バイブレーション関連の関数
 function playChime() {
   try {
     if (navigator.vibrate) navigator.vibrate([60, 50, 60]); // ブルッ、ブルッ
@@ -209,8 +217,57 @@ function playChime() {
       osc.start(ctx.currentTime + startTime);
       osc.stop(ctx.currentTime + startTime + duration);
     };
-    playTone(987.77, 0, 0.3); // B5 (チャ)
-    playTone(1318.51, 0.1, 0.5); // E6 (リン♪)
+    playTone(987.77, 0, 0.3); // B5
+    playTone(1318.51, 0.1, 0.5); // E6
+  } catch(e) {}
+}
+
+// ★ 新設：不正解時の「テロン↓」音
+function playIncorrectSE() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const playTone = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+    playTone(349.23, 0, 0.2); // F4
+    playTone(293.66, 0.15, 0.3); // D4
+  } catch(e) {}
+}
+
+// ★ 新設：次へボタンの「ティロン↑」音 ＋ 振動
+function playNextSE() {
+  try {
+    if (navigator.vibrate) navigator.vibrate([30]); // 短くブルッ
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const playTone = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+    playTone(587.33, 0, 0.1); // D5
+    playTone(880.00, 0.08, 0.2); // A5
   } catch(e) {}
 }
 
@@ -239,7 +296,8 @@ const Icons = {
   Alert:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   Link:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   Speaker: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
-  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>
 };
 
 const Confetti = ({ show }) => {
@@ -378,7 +436,6 @@ function generateQuiz(expression, all) {
     return { type, question:"✍️ 次の意味を表す英語フレーズをタイピングしてください", meaningHint: expression.meaning.split("。")[0], answer: expression.phrase, expression };
   }
   
-  // ★例文穴埋め：離れた単語も丸ごと１つの【 】に置き換え
   const dynPhrase = extractDynamicPhrase(expression.phrase, expression.example);
   const ansFmt = formatOpt(dynPhrase);
   const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -393,6 +450,18 @@ function generateQuiz(expression, all) {
     answer: ansFmt, 
     expression 
   };
+}
+
+function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
+  const r=size/2-stroke, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
+  return (
+    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E5E5" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
+        style={{transition:"stroke-dashoffset .7s ease"}}/>
+    </svg>
+  );
 }
 
 function BatchModal({ batch, expressions, onContinue }) {
@@ -410,8 +479,15 @@ function BatchModal({ batch, expressions, onContinue }) {
     <div style={{position:"fixed",inset:0,background:"#fff",zIndex:9000,display:"flex",flexDirection:"column",padding:24,overflowY:"auto"}}>
       <div style={{textAlign:"center",marginTop:20}}>
         <div style={{fontSize:20,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
-        <img src={yeastken.iconUrl} className="yeastken-img" alt={yeastken.name} onError={(e)=>{e.target.style.display='none';e.target.nextSibling.style.display='block';}} />
+        
+        <img 
+          src={yeastken.iconUrl} 
+          className="yeastken-img"
+          alt={yeastken.name}
+          onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }}
+        />
         <div style={{fontSize:64,margin:"10px 0",display:"none"}}>{yeastken.fallback}</div>
+        
         <div style={{fontSize:18,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
         <div style={{fontSize:14,fontWeight:700,color:"var(--muted)",marginTop:6}}>「{yeastken.msg}」</div>
       </div>
@@ -434,7 +510,6 @@ function BatchModal({ batch, expressions, onContinue }) {
                 <div style={{color:b.correct?"#46a302":"#c73434",fontSize:20,flexShrink:0}}>{b.correct?<Icons.Check/>:<Icons.Cross/>}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontWeight:800,fontSize:15,color:"#222"}}>{expr.phrase}</div>
-                  {/* ★ 追加機能：各フレーズの成績詳細を表示 */}
                   <div style={{fontSize:12,color:"#888",marginTop:4}}>
                     正答率: <strong style={{color:cp>=70?"var(--green)":cp>=40?"var(--yellow)":"var(--red)"}}>{cp}%</strong> 
                     <span style={{marginLeft:6}}>({expr.correctCount} / {expr.attempts}回正解)</span>
@@ -446,10 +521,62 @@ function BatchModal({ batch, expressions, onContinue }) {
         </div>
       </div>
 
-      {/* ★ チャリン音＋振動を鳴らしてマップへ戻る */}
       <button onClick={() => { playChime(); onContinue(pointsEarned); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
         {pointsEarned}ptゲットしてマップに戻る
       </button>
+    </div>
+  );
+}
+
+function StatusListModal({ status, expressions, onClose }) {
+  const list = expressions.filter(e=>e.status===status);
+  const isL  = status==="学習中";
+  const ac   = isL?"#1CB0F6":"#888";
+  const bg   = isL?"#ddeeff":"#f0f0f0";
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:8000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#fff",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:480,maxHeight:"80vh",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
+        <div style={{padding:"20px 20px 12px",borderBottom:"1px solid #EFEFEF",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{background:bg,color:ac,fontWeight:800,fontSize:12,borderRadius:99,padding:"2px 12px"}}>{status}</span>
+              <span style={{fontSize:20,fontWeight:900,color:"#2D2D2D"}}>{list.length}件</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{border:"none",background:"#f0f0f0",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#888"}}>
+            <Icons.Close/>
+          </button>
+        </div>
+        <div style={{overflowY:"auto",padding:"12px 16px 40px",display:"flex",flexDirection:"column",gap:8}}>
+          {list.length===0
+            ? <div style={{textAlign:"center",padding:"40px",color:"#aaa",fontSize:14}}>{status}の表現はありません</div>
+            : list.map(expr=>{
+              const cp = expr.attempts>0?Math.round(expr.correctCount/expr.attempts*100):null;
+              const cc = cp==null?"#ccc":cp>=70?"#58CC02":cp>=40?"#FFC800":"#FF4B4B";
+              return (
+                <div key={expr.id} style={{background:"#fff",border:"2px solid #EFEFEF",borderRadius:14,padding:"12px 14px"}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:15,fontWeight:800}}>{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
+                      <div style={{fontSize:12,color:"#888",marginTop:3,lineHeight:1.5}}>{expr.meaning.split("。")[0]}</div>
+                      <div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:3}}>{expr.example}</div>
+                    </div>
+                    {cp!==null&&(
+                      <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                        <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          <Ring pct={cp} size={40} stroke={4} color={cc}/>
+                          <span style={{position:"absolute",fontSize:9,fontWeight:900,color:"#2D2D2D"}}>{cp}%</span>
+                        </div>
+                        <div style={{fontSize:9,color:"#bbb"}}>{expr.attempts}回</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
     </div>
   );
 }
@@ -524,12 +651,6 @@ function App() {
 
   function handleAnswer(option) {
     if (selected || !quiz) return;
-    
-    // ★ 修正点：日本語が含まれていたら音声を再生しない（ミュート）
-    const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
-    if (!isJapanese) {
-      speakText(option);
-    }
 
     const isWrite  = quiz.type === "writing";
     const normalize = (str) => str.replace(/[.,?!]/g, '').trim().toLowerCase();
@@ -538,8 +659,16 @@ function App() {
     const rightAns = isWrite ? normalize(quiz.answer) : quiz.answer.toLowerCase();
     const correct  = userAns === rightAns;
 
+    // ★ 修正点: 正解の場合のみ読み上げ、不正解ならテロン↓音を鳴らす
+    if (correct) {
+      const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
+      if (!isJapanese) speakText(option);
+      setConfetti(true); setTimeout(()=>setConfetti(false),1300);
+    } else {
+      playIncorrectSE();
+    }
+
     setSelected(option); setIsCorrect(correct); setShowFB(true);
-    if (correct) { setConfetti(true); setTimeout(()=>setConfetti(false),1300); }
 
     const newExprs = exprs.map(e => {
       if (e.id!==quiz.expression.id) return e;
@@ -553,6 +682,8 @@ function App() {
   }
 
   function handleNext() {
+    playNextSE(); // ★ 修正点: 次へボタンでSEと振動
+    
     if (batch.length >= BATCH_SIZE) {
       setShowBatch(true);
     } else {
@@ -560,7 +691,6 @@ function App() {
     }
   }
 
-  // ★ 10問完了後、自動で次のステージ（normalStage + 1）に進行する
   function handleBatchContinue(earnedPts) {
     const newPts = points + earnedPts;
     setPoints(newPts);
@@ -579,6 +709,8 @@ function App() {
   }
 
   function handleMastered() {
+    playNextSE(); // 覚えたボタンも次へ進むのでSEを追加
+    
     const ne = exprs.map(e=>e.id===quiz.expression.id?{...e,status:"習得済み"}:e);
     setExprs(ne);
     showToast("⭐ 習得済みに登録しました！");
@@ -586,6 +718,13 @@ function App() {
     
     if (batch.length >= BATCH_SIZE) setShowBatch(true);
     else pickQuiz(ne, tab);
+  }
+
+  function handleRestore(id) {
+    const target = exprs.find(e=>e.id===id);
+    setExprs(prev=>prev.map(e=>e.id===id?{...e,status:"未学習"}:e));
+    showToast("↩ 未学習に戻しました");
+    if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
   }
 
   function handleSpeak() {
@@ -648,7 +787,6 @@ function App() {
               <div className="map-line-fill" style={{height: normalStage === 1 ? "0%" : "25%"}}/>
             </div>
             {[...Array(5)].map((_, i) => {
-              // ステージが1の時は一番下が1になるように、それ以降は自分が下から2番目になるように調整
               const nodeStage = normalStage === 1 ? i + 1 : normalStage - 1 + i;
               const isCurrent = nodeStage === normalStage;
               const isCleared = nodeStage < normalStage;
@@ -693,7 +831,7 @@ function App() {
               </div>
               {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i, arr) => {
                 const nodeStage = arr.length - i; 
-                const isCurrent = nodeStage === 1; // 常に一番下が現在地
+                const isCurrent = nodeStage === 1; 
                 const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
                 
                 return (
