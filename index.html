@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>SE試聴ツール（次へボタン最終選考編）</title>
+  <title>SE試聴ツール（次へボタン・スライド上昇編）</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
   <style>
     body { font-family: 'Nunito', sans-serif; background: #f5f5f5; color: #333; padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 50px; touch-action: manipulation; }
-    h1 { font-size: 20px; text-align: center; margin-bottom: 20px; }
+    h1 { font-size: 18px; text-align: center; margin-bottom: 20px; line-height: 1.4; }
     .desc { font-size: 14px; text-align: center; color: #666; margin-bottom: 30px; line-height: 1.6; }
     
     .card { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -27,7 +27,7 @@
 </head>
 <body>
 
-  <h1>🎵 SE試聴ツール（次へボタン最終選考）</h1>
+  <h1>🎵 SE試聴ツール<br>（次へボタン・スライド上昇編）</h1>
   <p class="desc">
     ※スマホのサイレントモードを解除してください。<br>
     画面に触れた瞬間に最速で音が鳴ります。
@@ -48,19 +48,27 @@
   </div>
 
   <div class="card">
-    <div class="card-title">⏩ 次へボタンの最終候補（3種類）</div>
+    <div class="card-title">⏩ 次へボタンの候補</div>
     <div class="grid">
       <button class="btn-next grid-full" onpointerdown="playNext1()">
-        候補 1：ティロン↑
-        <span>前回の候補1（パキッとしたポップな三角波）</span>
+        候補 1（残し）
+        <span>ティロン↑（パキッとポップ）</span>
       </button>
-      <button class="btn-next" onpointerdown="playNext4()">
-        候補 4：カチッ
-        <span>前回の候補4（メカニカル・通常のスピード）</span>
+      <button class="btn-next" onpointerdown="playNextSlideOriginal()">
+        スライド（オリジナル）
+        <span>ピュイッ（0.1秒）</span>
       </button>
-      <button class="btn-next" onpointerdown="playNext4Slow()">
-        候補 4（ゆっくり版）
-        <span>【新設】間隔を広げた落ち着いたメカニカル音</span>
+      <button class="btn-next" onpointerdown="playNextSlideSlow1()">
+        スライド（ややゆっくり）
+        <span>ピュイーッ（0.18秒）</span>
+      </button>
+      <button class="btn-next" onpointerdown="playNextSlideSlow2()">
+        スライド（さらにゆっくり）
+        <span>ピューーイ（0.25秒）</span>
+      </button>
+      <button class="btn-next" onpointerdown="playNextSlideHighSlow()">
+        スライド（高音でゆっくり）
+        <span>ピュイーッ（0.18秒・高音）</span>
       </button>
     </div>
   </div>
@@ -85,6 +93,23 @@
       const gain = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    }
+
+    function createSlideTone(freqStart, freqEnd, type, startTime, duration, volStart, volEnd) {
+      initAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freqStart, ctx.currentTime + startTime);
+      osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + startTime + duration);
+      
       gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
       gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
@@ -119,29 +144,36 @@
       playMetallicTone(2200 * 5.4, 0.06, 0.2);
     }
 
-    // ❌ 確定：不正解（前回の候補4・ずらして和音）
+    // ❌ 確定：不正解（ポロン）
     function playNgConfirmed() {
       createTone(350, 'sine', 0, 0.1, 0.3, 0.001);
       createTone(200, 'sine', 0.03, 0.1, 0.3, 0.001);
     }
 
-    // ⏩ 次へ 候補1：ティロン↑
+    // ⏩ 候補1：ティロン↑
     function playNext1() {
       createTone(880, 'triangle', 0, 0.08, 0.15, 0.01);
       createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
     }
 
-    // ⏩ 次へ 候補4：カチッ（通常版）
-    function playNext4() {
-      createTone(1000, 'square', 0, 0.03, 0.05, 0.001);
-      createTone(1200, 'square', 0.05, 0.03, 0.05, 0.001);
+    // ⏩ スライド（オリジナル）0.1秒
+    function playNextSlideOriginal() {
+      createSlideTone(400, 800, 'sine', 0, 0.1, 0.1, 0.001);
     }
 
-    // ⏩ 次へ 候補4：カチッ（★新設：ゆっくり版）
-    function playNext4Slow() {
-      // 音の間隔を0.05秒から0.11秒に広げ、音の長さをほんの少し伸ばして余韻を作りました
-      createTone(950, 'square', 0, 0.04, 0.05, 0.001);
-      createTone(1150, 'square', 0.11, 0.04, 0.05, 0.001);
+    // ⏩ スライド（ややゆっくり）0.18秒 ★おすすめ
+    function playNextSlideSlow1() {
+      createSlideTone(400, 800, 'sine', 0, 0.18, 0.1, 0.001);
+    }
+
+    // ⏩ スライド（さらにゆっくり）0.25秒
+    function playNextSlideSlow2() {
+      createSlideTone(400, 800, 'sine', 0, 0.25, 0.1, 0.001);
+    }
+
+    // ⏩ スライド（高音でややゆっくり）0.18秒
+    function playNextSlideHighSlow() {
+      createSlideTone(600, 1200, 'sine', 0, 0.18, 0.1, 0.001);
     }
   </script>
 </body>
