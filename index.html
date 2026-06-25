@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (いーすとけん公式イラスト＆フルマップ版)</title>
+  <title>English Quiz (SE＆フレーズ抽出 強化版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -25,7 +25,7 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
     
-    /* Header (ポイント等) */
+    /* Header */
     .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;}
     .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
     
@@ -37,11 +37,11 @@
 
     /* Map UI */
     .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:40px 0 80px;background:#f0f5f0;}
-    .map-path{display:flex;flex-direction:column;align-items:center;gap:40px;position:relative;width:100%;margin-top:20px;}
-    .map-line{position:absolute;top:30px;bottom:30px;width:14px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
+    .map-path{display:flex;flex-direction:column-reverse;align-items:center;gap:40px;position:relative;width:100%;}
+    .map-line{position:absolute;top:30px;bottom:30px;width:12px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
     .map-line-fill{position:absolute;bottom:0;width:100%;background:var(--green);border-radius:10px;transition:height 1s ease;}
     .node-wrap{position:relative;z-index:2;display:flex;justify-content:center;width:100%;}
-    .map-node{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;cursor:pointer;border:5px solid #fff;transition:transform .2s;}
+    .map-node{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer;border:4px solid #fff;transition:transform .2s;}
     .map-node.locked{background:#e5e5e5;color:#bbb;}
     .map-node.cleared{background:var(--green);color:#fff;box-shadow:0 6px 0 var(--gd);}
     .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
@@ -76,13 +76,11 @@
     .ex-sentence{margin-top:6px;padding:12px 14px;background:#fff5f0;border:2px solid #ffd6c0;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;}
     .ex-ja{margin-top:5px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.55;}
     
-    /* Speaker Main */
+    /* Speaker Main & Mini */
     .speak-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 0;width:85%;padding:16px;border:3px solid var(--yellow);border-radius:var(--r);background:#fffbf0;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;color:#8a6200;box-shadow:0 4px 0 var(--yd);-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s;}
     .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
     @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
-
-    /* フィードバックエリア用の小さなスピーカーアイコン */
     .mini-speak{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e5f6fd;color:var(--bd);border:1px solid #b3e5fc;cursor:pointer;margin-left:8px;vertical-align:middle;transition:background .2s, transform .1s;}
     .mini-speak:active{transform:scale(0.9);}
     .mini-speak.playing{background:var(--blue);color:#fff;animation:spin 1.5s linear infinite;}
@@ -96,7 +94,7 @@
     .opt:disabled{cursor:default;}
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
     
-    /* ライティングフォーム */
+    /* Writing */
     .write-form{display:flex;gap:8px;margin:8px 16px 0;}
     .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;}
     .write-input:focus{border-color:var(--blue);}
@@ -114,6 +112,13 @@
     .fdbk.ng .fdbk-ttl{color:var(--rd);}
     .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
     .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
+    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
+    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
+    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
+    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
+    .cum-count{font-size:10px;color:var(--muted);}
+    @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     
     /* Buttons */
     .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
@@ -124,7 +129,6 @@
     .btn-result:active{transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
     .btn-master{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);}
     .btn-master:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
-    
     .btn-link-wrap{display:flex;gap:8px;}
     .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
     
@@ -146,8 +150,7 @@
     .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
     @keyframes spin{to{transform:rotate(360deg)}}
-    
-    /* いーすとけん画像用 */
+    .banner{padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;background:#ffe5e5;border-bottom:2px solid var(--red);color:var(--rd);}
     .yeastken-img{width:160px;height:160px;object-fit:contain;margin:10px 0;animation:float 2s infinite ease-in-out;}
   </style>
 </head>
@@ -170,9 +173,9 @@ async function gasPost(action, data) {
   return res.json();
 }
 
-const LS_EXPRS  = "quiz-exprs-v7";
-const LS_STAGE  = "quiz-stage-v7";
-const LS_POINTS = "quiz-points-v7";
+const LS_EXPRS  = "quiz-exprs-v8";
+const LS_STAGE  = "quiz-stage-v8";
+const LS_POINTS = "quiz-points-v8";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -183,7 +186,6 @@ const DUMMY = [
   { id:3, phrase:"live paycheck to paycheck", meaning:"給料から給料まで生活する", example:"Many families are living paycheck to paycheck.", exampleJa:"多くの家庭がカツカツで生活している。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
-// ★ いーすとけん。公式イラスト画像URL（LINEストア等から引用）
 const YEASTKENS = [
   { name: "しばこっぺ", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/1883488/LINEStorePC/main.png", fallback: "🍞🐕", msg: "ふかふかに焼けたね！完璧だワン！" },
   { name: "サモメロン", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/24167340/LINEStorePC/main.png", fallback: "🍈🐕", msg: "もふもふ！あま～い大正解！" },
@@ -191,6 +193,30 @@ const YEASTKENS = [
   { name: "パグパン", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/28317231/LINEStorePC/main.png", fallback: "🍔🐶", msg: "むぎゅっとナイス！よくがんばったね！" },
   { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
 ];
+
+// ★ SE再生関数
+function playChime() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const playTone = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+    playTone(987.77, 0, 0.3); // B5
+    playTone(1318.51, 0.1, 0.5); // E6
+  } catch(e) {}
+}
 
 function speakText(text, onEnd) {
   if (!window.speechSynthesis) { onEnd?.(); return; }
@@ -209,15 +235,18 @@ function speakText(text, onEnd) {
   window.speechSynthesis.getVoices().length ? go() : (window.speechSynthesis.onvoiceschanged = go);
 }
 
-// Icons
-const CheckIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="20 6 9 17 4 12"/></svg>;
-const CrossIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const StarIc    = () => <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"1em",height:"1em"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const MapIc     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>;
-const AlertIc   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-const LinkIc    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
-const SpeakerIc = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
-const SearchIc  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+const Icons = {
+  Check:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="20 6 9 17 4 12"/></svg>,
+  Cross:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Star:    () => <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"1em",height:"1em"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Map:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>,
+  Alert:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  Link:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+  Speaker: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
+  Close:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.1em",height:"1.1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>
+};
 
 const Confetti = ({ show }) => {
   if (!show) return null;
@@ -242,7 +271,7 @@ const MiniSpeaker = ({ text }) => {
   };
   return (
     <span className={`mini-speak ${isPlaying?"playing":""}`} onClick={handlePlay} title="発音を聴く">
-      <SpeakerIc style={{width:"1em",height:"1em"}}/>
+      <Icons.Speaker style={{width:"1em",height:"1em"}}/>
     </span>
   );
 };
@@ -259,6 +288,7 @@ function buildOptions(correct, pool) {
   return shuffle(opts);
 }
 
+// ★「I（私）」の大文字キープ
 const formatOpt = (str) => {
   let s = str.toLowerCase();
   s = s.replace(/\bi\b/g, 'I');
@@ -269,30 +299,60 @@ const formatOpt = (str) => {
   return s;
 };
 
-function blankify(sentence, phrase) {
+// ★ 新・フレーズ抽出プログラム（離れた単語や変化した動詞も一発で特定）
+function extractDynamicPhrase(phrase, sentence) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  let result = sentence;
-  const exactRegex = new RegExp(escapeRegExp(phrase), "i");
-  if (exactRegex.test(result)) {
-    return result.replace(exactRegex, "【    】");
-  }
-  const words = phrase.split(/\s+/).filter(w => w.length > 0);
-  let matchCount = 0;
-  words.forEach(w => {
+  const getFuzzyPat = (w) => {
     let pat = escapeRegExp(w);
-    if (w.length > 2) {
-      if (w.endsWith('e')) pat = escapeRegExp(w.slice(0, -1)) + "(?:e|es|ed|ing)";
-      else if (w.endsWith('y')) pat = escapeRegExp(w.slice(0, -1)) + "(?:y|ies|ied|ying)";
-      else pat = escapeRegExp(w) + "(?:s|es|ed|ing|ning|ping|ting)?";
+    if (w.length >= 4) {
+      pat = escapeRegExp(w.slice(0, 3)) + "[a-z]{0,5}";
+    } else if (w.length === 3) {
+      pat = escapeRegExp(w.slice(0, 2)) + "[a-z]{0,4}";
+    } else {
+      pat = escapeRegExp(w) + "[a-z]{0,2}";
     }
-    const wordRegex = new RegExp("\\b" + pat + "\\b", "ig");
-    if (wordRegex.test(result)) {
-      result = result.replace(wordRegex, "【 】");
-      matchCount++;
-    }
+    return "\\b" + pat + "\\b";
+  };
+
+  const words = phrase.split(/\s+/).filter(w => w.length > 0);
+  const presentWords = [];
+  words.forEach(w => {
+    if (new RegExp(getFuzzyPat(w), "ig").test(sentence)) presentWords.push(w);
   });
-  if (matchCount === 0) return "【    】 (※元の文: " + sentence + ")";
-  return result;
+
+  if (presentWords.length === 0) return phrase;
+  if (presentWords.length === 1) {
+    const match = new RegExp(getFuzzyPat(presentWords[0]), "ig").exec(sentence);
+    return match ? match[0] : phrase;
+  }
+
+  const firstPat = new RegExp(getFuzzyPat(presentWords[0]), "ig");
+  const lastPat = new RegExp(getFuzzyPat(presentWords[presentWords.length - 1]), "ig");
+
+  let firstMatches = [];
+  let m;
+  while ((m = firstPat.exec(sentence)) !== null) firstMatches.push({ start: m.index, end: m.index + m[0].length });
+
+  let lastMatches = [];
+  while ((m = lastPat.exec(sentence)) !== null) lastMatches.push({ start: m.index, end: m.index + m[0].length });
+
+  let bestSpan = null;
+  let minDist = Infinity;
+
+  firstMatches.forEach(f => {
+    lastMatches.forEach(l => {
+      if (l.end > f.start) {
+        const dist = l.end - f.start;
+        if (dist < minDist) {
+          minDist = dist;
+          bestSpan = sentence.substring(f.start, l.end);
+        }
+      }
+    });
+  });
+
+  if (bestSpan && minDist < 150) return bestSpan;
+  return phrase;
 }
 
 function generateQuiz(expression, all) {
@@ -300,7 +360,7 @@ function generateQuiz(expression, all) {
   const acc = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
   const types = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
   
-  if (acc >= 60) types.push("writing");
+  if (acc >= 60) types.push("writing"); // 60%以上でタイピング解放
 
   const type = types[Math.floor(Math.random() * types.length)];
 
@@ -326,8 +386,22 @@ function generateQuiz(expression, all) {
     return { type, question:"✍️ 次の意味を表す英語フレーズをタイピングしてください", meaningHint: expression.meaning.split("。")[0], answer: expression.phrase, expression };
   }
   
-  const ansFmt = formatOpt(expression.phrase);
-  return { type:"example_blank", question:"例文の【    】に入るフレーズは？", exampleBlanked: blankify(expression.example, expression.phrase), exampleJa: expression.exampleJa, options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), answer: ansFmt, expression };
+  // ★ 例文穴埋め：賢い抽出で完全一致させる
+  const dynPhrase = extractDynamicPhrase(expression.phrase, expression.example);
+  const ansFmt = formatOpt(dynPhrase);
+  const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const blanked = expression.example.replace(new RegExp(escapeRegExp(dynPhrase), "i"), "【    】");
+  
+  // ダミーの選択肢も、ダミー例文から抽出できればするが、重いのでフレーズをそのままフォーマットする
+  return { 
+    type:"example_blank", 
+    question:"例文の【    】に入るフレーズは？", 
+    exampleBlanked: blanked, 
+    exampleJa: expression.exampleJa, 
+    options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), 
+    answer: ansFmt, 
+    expression 
+  };
 }
 
 function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
@@ -358,7 +432,6 @@ function BatchModal({ batch, expressions, onContinue }) {
       <div style={{textAlign:"center",marginTop:20}}>
         <div style={{fontSize:20,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
         
-        {/* ★ 画像によるキャラクター表示（エラー時は絵文字にフォールバック） */}
         <img 
           src={yeastken.iconUrl} 
           className="yeastken-img"
@@ -385,7 +458,7 @@ function BatchModal({ batch, expressions, onContinue }) {
             if(!expr) return null;
             return (
               <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:b.correct?"#f3fff0":"#fff4f4",border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,borderRadius:12,padding:"10px 12px"}}>
-                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:18,flexShrink:0}}>{b.correct?<CheckIc/>:<CrossIc/>}</div>
+                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:18,flexShrink:0}}>{b.correct?<Icons.Check/>:<Icons.Cross/>}</div>
                 <div style={{flex:1,fontWeight:800,fontSize:14}}>{expr.phrase}</div>
               </div>
             );
@@ -393,8 +466,8 @@ function BatchModal({ batch, expressions, onContinue }) {
         </div>
       </div>
 
-      <button onClick={() => onContinue(pointsEarned)} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
-        マップへ戻る
+      <button onClick={() => { playChime(); onContinue(pointsEarned); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
+        {pointsEarned}ptゲットしてマップに戻る
       </button>
     </div>
   );
@@ -405,7 +478,7 @@ const BATCH_SIZE = 10;
 function App() {
   const [loaded,        setLoaded]        = useState(false);
   const [gasError,      setGasError]      = useState(false);
-  const [tab,           setTab]           = useState("home"); // home | weak_home | quiz | weak_quiz | learned
+  const [tab,           setTab]           = useState("home"); 
   const [exprs,         setExprs]         = useState([]);
   const [quiz,          setQuiz]          = useState(null);
   const [selected,      setSelected]      = useState(null);
@@ -418,8 +491,6 @@ function App() {
   const [showBatch,     setShowBatch]     = useState(false);
   const [points,        setPoints]        = useState(0);
   const [inputVal,      setInputVal]      = useState("");
-  
-  // ★ 進行度（10問クリアした回数）を記録
   const [normalStage,   setNormalStage]   = useState(1);
 
   const exprsRef = useRef(exprs);
@@ -503,7 +574,6 @@ function App() {
     }
   }
 
-  // ★ 10問完了時に初めてステージが進行する
   function handleBatchContinue(earnedPts) {
     const newPts = points + earnedPts;
     setPoints(newPts);
@@ -612,7 +682,7 @@ function App() {
                     className={`map-node ${isCurrent ? 'current' : isCleared ? 'cleared' : 'locked'}`}
                     onClick={() => isCurrent ? startSession("quiz") : null}
                   >
-                    {isCleared ? <CheckIc/> : <StarIc/>}
+                    {isCleared ? <Icons.Check/> : <Icons.Star/>}
                   </div>
                 </div>
               );
@@ -640,10 +710,9 @@ function App() {
               <div className="map-line" style={{background:"#ffcccc"}}>
                 <div className="map-line-fill" style={{background:"var(--red)", height:"0%"}}/>
               </div>
-              {/* 苦手な数に応じてノード数を動的生成（10問で1ノード） */}
               {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i, arr) => {
                 const nodeStage = arr.length - i; 
-                const isCurrent = nodeStage === 1; // 一番下を現在地とする
+                const isCurrent = nodeStage === 1; // 常に一番下が現在地
                 const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
                 
                 return (
@@ -655,7 +724,7 @@ function App() {
                       className={`map-node ${isCurrent ? 'weak' : 'locked'}`}
                       onClick={() => isCurrent ? startSession("weak_quiz") : null}
                     >
-                      <AlertIc/>
+                      <Icons.Alert/>
                     </div>
                   </div>
                 );
@@ -691,7 +760,7 @@ function App() {
                 {quiz.type==="multiple_choice"&&<div className="qphrase">"{quiz.expression.phrase}"</div>}
                 {quiz.type==="fill_blank"&&<><div className="blank-box">{quiz.phrase}</div><div className="sub-info">{quiz.subInfo}</div></>}
                 {quiz.type==="meaning_match"&&<div className="mhint">💬 {quiz.meaningHint}</div>}
-                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><SpeakerIc/>{playing?"再生中…":"タップして音声を再生"}</button>}
+                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"タップして音声を再生"}</button>}
                 {quiz.type==="writing"&&<><div className="mhint" style={{fontSize:"18px",margin:"10px 0 6px",color:"#111"}}>💡 {quiz.meaningHint}</div><div style={{fontSize:"12px",color:"var(--muted)"}}>※フレーズ全体を正しく入力してください</div></>}
                 {quiz.type==="example_blank"&&<><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>}
               </div>
@@ -713,7 +782,7 @@ function App() {
 
               {showFB&&(
                 <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
-                  <div className="fdbk-ttl">{isCorrect?<><CheckIc/> 正解！</>:<><CrossIc/> 不正解…</>}</div>
+                  <div className="fdbk-ttl">{isCorrect?<><Icons.Check/> 正解！</>:<><Icons.Cross/> 不正解…</>}</div>
                   <div className="fdbk-body">
                     {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span></> : <span><strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span>}
                     <br/>{quiz.expression.meaning}
@@ -730,12 +799,12 @@ function App() {
                     <button className={`btn ${batchN >= BATCH_SIZE ? "btn-result" : "btn-next"}`} onClick={handleNext}>
                       {batchN >= BATCH_SIZE ? "結果を見る →" : "次の問題へ →"}
                     </button>
-                    <button className="btn btn-master" onClick={handleMastered}><StarIc/> この表現はもう覚えた！</button>
+                    <button className="btn btn-master" onClick={handleMastered}><Icons.Star/> この表現はもう覚えた！</button>
                   </>
                 )}
                 <div className="btn-link-wrap">
-                  <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><LinkIc/> 動画を見る</button>
-                  <button className="btn-src" onClick={()=>handleSearch(quiz.expression.phrase)}><SearchIc/> Webで検索</button>
+                  <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><Icons.Link/> 動画を見る</button>
+                  <button className="btn-src" onClick={()=>handleSearch(quiz.expression.phrase)}><Icons.Search/> Webで検索</button>
                 </div>
               </div>
             </>
@@ -754,13 +823,13 @@ function App() {
               {learned.map(expr=>{
                 return (
                   <div key={expr.id} className="ll-item">
-                    <div className="ll-icon"><StarIc/></div>
+                    <div className="ll-icon"><Icons.Star/></div>
                     <div className="ll-body">
                       <div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
                       <div className="ll-meaning">{expr.meaning.split("。")[0]}</div>
                       <div className="ll-ex">{expr.example}</div>
                     </div>
-                    <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><RefreshIc/> 戻す</button>
+                    <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><Icons.Refresh/> 戻す</button>
                   </div>
                 );
               })}
@@ -773,17 +842,17 @@ function App() {
       {(tab === "home" || tab === "weak_home" || tab === "learned") && (
         <nav className="nav">
           <button className={`ntab${tab==="home"?" on":""}`} onClick={()=>setTab("home")}>
-            <MapIc/> ステージ
+            <Icons.Map/> ステージ
           </button>
           <button className={`ntab${tab==="weak_home"?" on":""}`} onClick={()=>setTab("weak_home")}>
             <div style={{position:"relative"}}>
-              <AlertIc/>
+              <Icons.Alert/>
               {weakList.length > 0 && <span style={{position:"absolute",top:-8,right:-12}} className="badge-red">{weakList.length}</span>}
             </div>
             苦手克服
           </button>
           <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}>
-            <StarIc/> 習得済み
+            <Icons.Star/> 習得済み
           </button>
         </nav>
       )}
