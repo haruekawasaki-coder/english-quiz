@@ -1,955 +1,151 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (SEカスタマイズ＆完全版)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-  
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SE試聴ツール（リアル硬貨編）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --green:#58CC02;--gd:#46a302;--gpale:#d7f5b1;
-      --blue:#1CB0F6;--bd:#0d8fc9;
-      --red:#FF4B4B;--rd:#c73434;
-      --yellow:#FFC800;--yd:#e5b400;
-      --bg:#F5F5F5;--card:#FFF;--text:#2D2D2D;
-      --muted:#888;--border:#E5E5E5;--r:16px;
-    }
-    html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);}
-    #root{height:100%;}
-    .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
+    body { font-family: 'Nunito', sans-serif; background: #f5f5f5; color: #333; padding: 20px; max-width: 500px; margin: 0 auto; }
+    h1 { font-size: 20px; text-align: center; margin-bottom: 20px; }
+    .desc { font-size: 14px; text-align: center; color: #666; margin-bottom: 30px; line-height: 1.6; }
     
-    /* Header */
-    .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;}
-    .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
+    .card { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; color: #333; border-bottom: 2px solid #eee; padding-bottom: 8px;}
     
-    /* Nav */
-    .nav{background:var(--card);border-top:2px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100;}
-    .ntab{flex:1;padding:12px 2px 10px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;border-top:3px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
-    .ntab.on{color:var(--blue);border-top-color:var(--blue);}
-    .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:10px;font-weight:900;}
-
-    /* Map UI */
-    .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:40px 0 80px;background:#f0f5f0;}
-    .map-path{display:flex;flex-direction:column-reverse;align-items:center;gap:40px;position:relative;width:100%;}
-    .map-line{position:absolute;top:30px;bottom:30px;width:12px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
-    .map-line-fill{position:absolute;bottom:0;width:100%;background:var(--green);border-radius:10px;transition:height 1s ease;}
-    .node-wrap{position:relative;z-index:2;display:flex;justify-content:center;width:100%;}
-    .map-node{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer;border:4px solid #fff;transition:transform .2s;}
-    .map-node.locked{background:#e5e5e5;color:#bbb;}
-    .map-node.cleared{background:var(--green);color:#fff;box-shadow:0 6px 0 var(--gd);}
-    .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
-    .map-node.weak{background:var(--red);color:#fff;box-shadow:0 6px 0 var(--rd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
-    .map-start-btn{position:absolute;top:-50px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
-    .map-start-btn.weak{color:var(--red);}
-    .map-start-btn::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
-    @keyframes float{0%,100%{transform:scale(1.15) translateY(0)}50%{transform:scale(1.15) translateY(-6px)}}
-    @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
-
-    /* Batch dots */
-    .bdots{display:flex;gap:6px;justify-content:center;padding:18px 16px 4px;}
-    .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
-    .bdot.ok{background:var(--green);}
-    .bdot.ng{background:var(--red);}
-    .bdot.cur{background:var(--blue);transform:scale(1.3);}
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    button { flex: 1; padding: 16px 12px; border: none; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; color: #fff; transition: transform 0.1s; }
+    button:active { transform: translateY(3px); }
     
-    /* Quiz card */
-    .qcard{margin:10px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
-    .qbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:99px;padding:3px 12px;margin-bottom:10px;}
-    .qbadge.mc{background:#d7f5b1;color:#3a9100;}
-    .qbadge.fb{background:#ddeeff;color:var(--bd);}
-    .qbadge.mm{background:#f0e0ff;color:#9340c8;}
-    .qbadge.ls{background:#fff3cd;color:#8a6200;}
-    .qbadge.ex{background:#ffe4e4;color:#c73434;}
-    .qbadge.wr{background:#e0f7fa;color:#006064;}
-    .qquestion{font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.5;}
-    .qphrase{font-size:23px;font-weight:900;margin:4px 0 6px;line-height:1.25;}
-    .blank-box{font-size:18px;font-weight:800;background:#f0f0f0;border-radius:10px;padding:10px 14px;margin:4px 0 6px;line-height:1.5;}
-    .sub-info{margin-top:8px;padding:10px 13px;background:#f7f7f7;border-radius:10px;font-size:13px;font-weight:700;color:var(--gd);line-height:1.5;}
-    .mhint{margin-top:6px;padding:11px 14px;background:#f7f7f7;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;color:#222;}
-    .ex-sentence{margin-top:6px;padding:12px 14px;background:#fff5f0;border:2px solid #ffd6c0;border-radius:12px;font-size:15px;font-weight:700;line-height:1.65;}
-    .ex-ja{margin-top:5px;font-size:12px;color:var(--muted);font-style:italic;line-height:1.55;}
-    
-    /* Speaker Main & Mini */
-    .speak-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 0;width:85%;padding:16px;border:3px solid var(--yellow);border-radius:var(--r);background:#fffbf0;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;color:#8a6200;box-shadow:0 4px 0 var(--yd);-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s;}
-    .speak-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
-    .speak-btn.playing{background:var(--yellow);animation:spulse 1s infinite;}
-    @keyframes spulse{0%,100%{box-shadow:0 4px 0 var(--yd)}50%{box-shadow:0 4px 0 var(--yd),0 0 0 8px rgba(255,200,0,.22)}}
-
-    .mini-speak{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e5f6fd;color:var(--bd);border:1px solid #b3e5fc;cursor:pointer;margin-left:8px;vertical-align:middle;transition:background .2s, transform .1s;}
-    .mini-speak:active{transform:scale(0.9);}
-    .mini-speak.playing{background:var(--blue);color:#fff;animation:spin 1.5s linear infinite;}
-    
-    /* Options */
-    .opts{display:flex;flex-direction:column;gap:8px;margin:8px 16px 0;}
-    .opt{border:2.5px solid var(--border);border-radius:var(--r);padding:13px 18px;background:var(--card);font-family:inherit;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;box-shadow:0 3px 0 var(--border);-webkit-tap-highlight-color:transparent;outline:none;}
-    @media(hover:hover)and(pointer:fine){.opt:hover:not(:disabled):not(.ok):not(.ng){border-color:var(--blue);background:#f0faff;}}
-    .opt.ok{border-color:var(--green)!important;background:var(--gpale)!important;color:var(--gd)!important;box-shadow:0 3px 0 var(--gd)!important;}
-    .opt.ng{border-color:var(--red)!important;background:#ffe5e5!important;color:var(--rd)!important;box-shadow:0 3px 0 var(--rd)!important;animation:shake .3s;}
-    .opt:disabled{cursor:default;}
-    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-    
-    /* Writing */
-    .write-form{display:flex;gap:8px;margin:8px 16px 0;}
-    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;}
-    .write-input:focus{border-color:var(--blue);}
-    .write-input:disabled{background:#eef1f5;color:var(--muted);border-color:#d5d9e0;box-shadow:none;}
-    .btn-submit-write{border:none;border-radius:12px;padding:0 24px;font-family:inherit;font-size:15px;font-weight:800;background:var(--blue);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--bd);transition:transform .1s,box-shadow .1s;}
-    .btn-submit-write:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
-    .btn-submit-write:disabled{background:var(--border);box-shadow:none;cursor:default;}
-
-    /* Feedback */
-    .fdbk{margin:10px 16px 0;border-radius:var(--r);padding:13px 16px;border:2px solid;animation:sup .28s cubic-bezier(.34,1.56,.64,1);}
-    .fdbk.ok{background:var(--gpale);border-color:var(--green);}
-    .fdbk.ng{background:#ffe5e5;border-color:var(--red);}
-    .fdbk-ttl{font-size:15px;font-weight:900;display:flex;align-items:center;gap:6px;margin-bottom:5px;}
-    .fdbk.ok .fdbk-ttl{color:var(--gd);}
-    .fdbk.ng .fdbk-ttl{color:var(--rd);}
-    .fdbk-body{font-size:14px;line-height:1.65;color:#111;}
-    .fdbk-ex{margin-top:8px;font-size:13px;color:#333;font-weight:600;line-height:1.6;border-top:1.5px dashed rgba(0,0,0,.12);padding-top:8px;}
-    .cum-row{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(0,0,0,.09);}
-    .cum-label{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;}
-    .cum-bar-wrap{flex:1;height:6px;background:rgba(0,0,0,.1);border-radius:99px;overflow:hidden;}
-    .cum-bar{height:100%;border-radius:99px;transition:width .8s ease;}
-    .cum-pct{font-size:12px;font-weight:900;min-width:30px;text-align:right;}
-    .cum-count{font-size:10px;color:var(--muted);}
-    @keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    
-    /* Buttons */
-    .btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
-    .btn{border:none;border-radius:var(--r);padding:15px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,box-shadow .12s;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:8px;}
-    .btn-next{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--gd);}
-    .btn-next:active{transform:translateY(2px);box-shadow:0 2px 0 var(--gd);}
-    .btn-result{background:var(--blue);color:#fff;box-shadow:0 4px 0 var(--bd);}
-    .btn-result:active{transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
-    .btn-master{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);}
-    .btn-master:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
-    
-    .btn-link-wrap{display:flex;gap:8px;}
-    .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
-    
-    /* Toast */
-    .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-120px);background:#1a1a1a;color:#fff;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;opacity:0;}
-    .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
-    
-    /* Learned list */
-    .ll-hdr{padding:16px 16px 8px;}
-    .ll-title{font-size:21px;font-weight:900;}
-    .ll-sub{font-size:13px;color:var(--muted);margin-top:2px;}
-    .ll-list{padding:4px 16px 120px;display:flex;flex-direction:column;gap:9px;}
-    .ll-item{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:13px;display:flex;align-items:flex-start;gap:11px;box-shadow:0 3px 0 var(--border);}
-    .ll-icon{width:34px;height:34px;background:var(--gpale);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:15px;flex-shrink:0;margin-top:2px;}
-    .ll-body{flex:1;min-width:0;}
-    .ll-phrase{font-size:15px;font-weight:800;}
-    .ll-meaning{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5;}
-    
-    .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-    @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .banner{padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;background:#ffe5e5;border-bottom:2px solid var(--red);color:var(--rd);}
-    .yeastken-img{width:160px;height:160px;object-fit:contain;margin:10px 0;animation:float 2s infinite ease-in-out;}
+    .btn-ng { background: #FF4B4B; box-shadow: 0 4px 0 #c73434; }
+    .btn-next { background: #1CB0F6; box-shadow: 0 4px 0 #0d8fc9; }
+    .btn-pt { background: #FFC800; color: #5a3f00; box-shadow: 0 4px 0 #e5b400; display: flex; flex-direction: column; align-items: center; gap: 4px;}
+    .btn-pt span { font-size: 11px; opacity: 0.8; font-weight: 700; }
   </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel" data-type="module" data-presets="react">
-const { useState, useEffect, useCallback, useRef } = React;
+  <h1>🎵 SE試聴ツール</h1>
+  <p class="desc">
+    ※スマホのサイレントモードを解除して試聴してください。<br>
+    「Pt獲得」のリアルな硬貨音を3種類用意しました。
+  </p>
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwu8KtiWduIE_Bp9OSYP0DoUIvc8WTeF660uWqLOuOCCu6dn8BjqFzJrYvUmYl8hhhpMQ/exec";
-
-async function gasGet(params) {
-  const url = GAS_URL + "?" + new URLSearchParams(params);
-  const res = await fetch(url);
-  return res.json();
-}
-async function gasPost(action, data) {
-  const body = new URLSearchParams({ action, data: JSON.stringify(data) });
-  const res = await fetch(GAS_URL, { method:"POST", body });
-  return res.json();
-}
-
-const LS_EXPRS  = "quiz-exprs-v9";
-const LS_STAGE  = "quiz-stage-v9";
-const LS_POINTS = "quiz-points-v9";
-
-function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
-function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
-
-const DUMMY = [
-  { id:1, phrase:"break the ice", meaning:"場を和ませる・打ち解ける", example:"He told a joke to break the ice.", exampleJa:"場を和ませるため冗談を言った。", url:"https://youtube.com", status:"学習中", attempts:1, correctCount:0 },
-  { id:2, phrase:"hit the nail on the head", meaning:"的を射る・ズバリ言い当てる", example:"You hit the nail on the head.", exampleJa:"まさにその通りです。", url:"https://youtube.com", status:"未学習", attempts:0, correctCount:0 },
-  { id:3, phrase:"bite off more than you can chew", meaning:"手に負えないほど多くのことを引き受ける", example:"He bit off more than he could chew when he agreed to manage three projects.", exampleJa:"彼は3つのプロジェクトを管理することに同意し、手に負えなくなった。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
-];
-
-const YEASTKENS = [
-  { name: "しばこっぺ", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/1883488/LINEStorePC/main.png", fallback: "🍞🐕", msg: "ふかふかに焼けたね！完璧だワン！" },
-  { name: "サモメロン", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/24167340/LINEStorePC/main.png", fallback: "🍈🐕", msg: "もふもふ！あま～い大正解！" },
-  { name: "とさあんこ", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/25511636/LINEStorePC/main.png", fallback: "🫘🐕", msg: "どっしり構えた知識！すごいぜよ！" },
-  { name: "パグパン", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/28317231/LINEStorePC/main.png", fallback: "🍔🐶", msg: "むぎゅっとナイス！よくがんばったね！" },
-  { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
-];
-
-// ★ SE・バイブレーションの基盤（絶対に鳴る仕組み）
-let audioCtx = null;
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-
-function playTone(freq, type, startTime, duration, volStart, volEnd) {
-  try {
-    const ctx = initAudio();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
-    gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime + startTime);
-    osc.stop(ctx.currentTime + startTime + duration);
-  } catch(e) {}
-}
-
-// 💰 Pt獲得：チャリーン！（お金の音、スクエア波）
-function playChime() {
-  if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
-  playTone(987.77, 'square', 0, 0.1, 0.08, 0.01);
-  playTone(1318.51, 'square', 0.08, 0.4, 0.1, 0.01);
-}
-
-// ❌ 不正解：マイルド＆癒やし系（ポヨォン…、サイン波）
-function playIncorrectSE() {
-  playTone(300, 'sine', 0, 0.3, 0.15, 0.01);
-  playTone(250, 'sine', 0.15, 0.4, 0.15, 0.01);
-}
-
-// ⏩ 次へ：パキッとしたポップ（ティロン↑、トライアングル波）
-function playNextSE() {
-  if (navigator.vibrate) navigator.vibrate([30]);
-  playTone(880, 'triangle', 0, 0.08, 0.15, 0.01);
-  playTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
-}
-
-function speakText(text, onEnd) {
-  if (!window.speechSynthesis) { onEnd?.(); return; }
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text);
-  u.lang = isJapanese ? "ja-JP" : "en-US";
-  u.rate = 0.82;
-  if (onEnd) u.onend = onEnd;
-  const go = () => {
-    const v = window.speechSynthesis.getVoices();
-    const targetVoice = v.find(x => x.lang.startsWith(isJapanese ? "ja" : "en-US")) || v.find(x => x.lang.startsWith(isJapanese ? "ja" : "en"));
-    if (targetVoice) u.voice = targetVoice;
-    window.speechSynthesis.speak(u);
-  };
-  window.speechSynthesis.getVoices().length ? go() : (window.speechSynthesis.onvoiceschanged = go);
-}
-
-const Icons = {
-  Check:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="20 6 9 17 4 12"/></svg>,
-  Cross:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Star:    () => <svg viewBox="0 0 24 24" fill="currentColor" style={{width:"1em",height:"1em"}}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  Map:     () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>,
-  Alert:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.2em",height:"1.2em"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-  Link:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
-  Speaker: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
-  Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>
-};
-
-const Confetti = ({ show }) => {
-  if (!show) return null;
-  const C = ["#58CC02","#FFC800","#1CB0F6","#CE82FF","#FF4B4B","#FF9600"];
-  const dots = Array.from({length:28},(_,i)=>({
-    id:i, color:C[i%C.length], left:Math.random()*100, top:Math.random()*35+5, w:Math.random()*10+4, h:Math.random()*14+5, delay:Math.random()*0.5
-  }));
-  return (
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9998,overflow:"hidden"}}>
-      {dots.map(d=>(<div key={d.id} style={{position:"absolute",left:`${d.left}%`,top:`${d.top}%`,width:d.w,height:d.h,background:d.color,borderRadius:2,animation:`cfFall 1.1s ease-in ${d.delay}s forwards`}}/>))}
+  <div class="card">
+    <div class="card-title">✅ 確定済みのSE</div>
+    <div class="btn-group">
+      <button class="btn-ng" onclick="playNg()">不正解<br><span style="font-size:11px;font-weight:400;">(マイルド)</span></button>
+      <button class="btn-next" onclick="playNext()">次へボタン<br><span style="font-size:11px;font-weight:400;">(パキッとポップ)</span></button>
     </div>
-  );
-};
+  </div>
 
-const MiniSpeaker = ({ text }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const handlePlay = (e) => {
-    e.stopPropagation();
-    if (isPlaying) return;
-    setIsPlaying(true);
-    speakText(text, () => setIsPlaying(false));
-  };
-  return (
-    <span className={`mini-speak ${isPlaying?"playing":""}`} onClick={handlePlay} title="発音を聴く">
-      <Icons.Speaker style={{width:"1em",height:"1em"}}/>
-    </span>
-  );
-};
-
-const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-
-function buildOptions(correct, pool) {
-  const seen = new Set([correct]);
-  const opts = [correct];
-  for (const c of shuffle(pool)) {
-    if (!seen.has(c) && opts.length < 4) { seen.add(c); opts.push(c); }
-    if (opts.length === 4) break;
-  }
-  return shuffle(opts);
-}
-
-const formatOpt = (str) => {
-  let s = str.toLowerCase();
-  s = s.replace(/\bi\b/g, 'I');
-  s = s.replace(/\bi'm\b/g, "I'm");
-  s = s.replace(/\bi've\b/g, "I've");
-  s = s.replace(/\bi'll\b/g, "I'll");
-  s = s.replace(/\bi'd\b/g, "I'd");
-  return s;
-};
-
-function extractDynamicPhrase(phrase, sentence) {
-  const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const getFuzzyPat = (w) => {
-    let pat = escapeRegExp(w);
-    if (w.length >= 4) {
-      pat = escapeRegExp(w.slice(0, 3)) + "[a-z]{0,5}";
-    } else if (w.length === 3) {
-      pat = escapeRegExp(w.slice(0, 2)) + "[a-z]{0,4}";
-    } else {
-      pat = escapeRegExp(w) + "[a-z]{0,2}";
-    }
-    return "\\b" + pat + "\\b";
-  };
-
-  const words = phrase.split(/\s+/).filter(w => w.length > 0);
-  const presentWords = [];
-  words.forEach(w => {
-    if (new RegExp(getFuzzyPat(w), "ig").test(sentence)) presentWords.push(w);
-  });
-
-  if (presentWords.length === 0) return phrase;
-  if (presentWords.length === 1) {
-    const match = new RegExp(getFuzzyPat(presentWords[0]), "ig").exec(sentence);
-    return match ? match[0] : phrase;
-  }
-
-  const firstPat = new RegExp(getFuzzyPat(presentWords[0]), "ig");
-  const lastPat = new RegExp(getFuzzyPat(presentWords[presentWords.length - 1]), "ig");
-
-  let firstMatches = [];
-  let m;
-  while ((m = firstPat.exec(sentence)) !== null) firstMatches.push({ start: m.index, end: m.index + m[0].length });
-
-  let lastMatches = [];
-  while ((m = lastPat.exec(sentence)) !== null) lastMatches.push({ start: m.index, end: m.index + m[0].length });
-
-  let bestSpan = null;
-  let minDist = Infinity;
-
-  firstMatches.forEach(f => {
-    lastMatches.forEach(l => {
-      if (l.end > f.start) {
-        const dist = l.end - f.start;
-        if (dist < minDist) {
-          minDist = dist;
-          bestSpan = sentence.substring(f.start, l.end);
-        }
-      }
-    });
-  });
-
-  if (bestSpan && minDist < 150) return bestSpan;
-  return phrase;
-}
-
-function generateQuiz(expression, all) {
-  const others = all.filter(e => e.id !== expression.id);
-  const acc = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
-  const types = ["multiple_choice","fill_blank","meaning_match","listening","example_blank"];
-  
-  if (acc >= 60) types.push("writing");
-
-  const type = types[Math.floor(Math.random() * types.length)];
-
-  if (type === "multiple_choice") {
-    const correct = expression.meaning.split("・")[0].split("。")[0];
-    return { type, question:`"${expression.phrase}" の意味は？`, options: buildOptions(correct, others.map(e=>e.meaning.split("・")[0].split("。")[0])), answer: correct, expression };
-  }
-  if (type === "fill_blank") {
-    const words = expression.phrase.split(" ");
-    const bi    = Math.floor(Math.random() * words.length);
-    const ansFmt = formatOpt(words[bi]);
-    return { type, question:"空欄に入る単語を選んでください", phrase: words.map((w,i) => i===bi ? "【  】" : w).join(" "), subInfo:`💡 意味：${expression.meaning.split("。")[0]}`, options: buildOptions(ansFmt, others.flatMap(e=>e.phrase.split(" ").map(w=>formatOpt(w)))), answer: ansFmt, expression };
-  }
-  if (type === "meaning_match") {
-    const ansFmt = formatOpt(expression.phrase);
-    return { type, question:"次の意味に合う英語表現はどれ？", meaningHint: expression.meaning.split("。")[0], options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), answer: ansFmt, expression };
-  }
-  if (type === "listening") {
-    const ansFmt = formatOpt(expression.phrase);
-    return { type, question:"🎧 音声を聞いて、正しい英語表現を選んでください", options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), answer: ansFmt, expression };
-  }
-  if (type === "writing") {
-    return { type, question:"✍️ 次の意味を表す英語フレーズをタイピングしてください", meaningHint: expression.meaning.split("。")[0], answer: expression.phrase, expression };
-  }
-  
-  const dynPhrase = extractDynamicPhrase(expression.phrase, expression.example);
-  const ansFmt = formatOpt(dynPhrase);
-  const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const blanked = expression.example.replace(new RegExp(escapeRegExp(dynPhrase), "i"), "【    】");
-  
-  return { 
-    type:"example_blank", 
-    question:"例文の【    】に入るフレーズは？", 
-    exampleBlanked: blanked, 
-    exampleJa: expression.exampleJa, 
-    options: buildOptions(ansFmt, others.map(e=>formatOpt(e.phrase))), 
-    answer: ansFmt, 
-    expression 
-  };
-}
-
-function Ring({ pct, size=50, stroke=5, color="#58CC02" }) {
-  const r=size/2-stroke, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
-  return (
-    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E5E5E5" strokeWidth={stroke}/>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
-        style={{transition:"stroke-dashoffset .7s ease"}}/>
-    </svg>
-  );
-}
-
-function BatchModal({ batch, expressions, onContinue }) {
-  const correctN = batch.filter(b=>b.correct).length;
-  const pointsEarned = 20 + (correctN * 2);
-  const [yeastken, setYeastken] = useState(null);
-
-  useEffect(() => {
-    setYeastken(YEASTKENS[Math.floor(Math.random() * YEASTKENS.length)]);
-  }, []);
-
-  if (!yeastken) return null;
-
-  return (
-    <div style={{position:"fixed",inset:0,background:"#fff",zIndex:9000,display:"flex",flexDirection:"column",padding:24,overflowY:"auto"}}>
-      <div style={{textAlign:"center",marginTop:20}}>
-        <div style={{fontSize:20,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
-        
-        <img 
-          src={yeastken.iconUrl} 
-          className="yeastken-img"
-          alt={yeastken.name}
-          onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }}
-        />
-        <div style={{fontSize:64,margin:"10px 0",display:"none"}}>{yeastken.fallback}</div>
-        
-        <div style={{fontSize:18,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
-        <div style={{fontSize:14,fontWeight:700,color:"var(--muted)",marginTop:6}}>「{yeastken.msg}」</div>
-      </div>
-      
-      <div style={{background:"#fffbe6",border:"3px solid var(--yellow)",borderRadius:16,padding:20,margin:"24px 0",textAlign:"center"}}>
-        <div style={{fontSize:12,fontWeight:800,color:"#b38b00",marginBottom:4}}>獲得ポイント</div>
-        <div style={{fontSize:36,fontWeight:900,color:"var(--yd)"}}>+{pointsEarned} <span style={{fontSize:18}}>pt</span></div>
-        <div style={{fontSize:12,fontWeight:700,color:"#999",marginTop:4}}>(クリア20pt + 正解{correctN}問×2pt)</div>
-      </div>
-
-      <div style={{flex:1}}>
-        <div style={{fontSize:13,fontWeight:800,color:"#bbb",marginBottom:10}}>今回の結果 ({correctN}/10問正解)</div>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {batch.map((b,i)=>{
-            const expr = expressions.find(e=>e.id===b.expressionId);
-            if(!expr) return null;
-            const cp = expr.attempts > 0 ? Math.round((expr.correctCount / expr.attempts) * 100) : 0;
-            return (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:b.correct?"#f3fff0":"#fff4f4",border:`2px solid ${b.correct?"#58CC02":"#FF4B4B"}`,borderRadius:12,padding:"12px"}}>
-                <div style={{color:b.correct?"#46a302":"#c73434",fontSize:20,flexShrink:0}}>{b.correct?<Icons.Check/>:<Icons.Cross/>}</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:800,fontSize:15,color:"#222"}}>{expr.phrase}</div>
-                  <div style={{fontSize:12,color:"#888",marginTop:4}}>
-                    正答率: <strong style={{color:cp>=70?"var(--green)":cp>=40?"var(--yellow)":"var(--red)"}}>{cp}%</strong> 
-                    <span style={{marginLeft:6}}>({expr.correctCount} / {expr.attempts}回正解)</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <button onClick={() => { playChime(); onContinue(pointsEarned); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0}}>
-        {pointsEarned}ptゲットしてマップに戻る
+  <div class="card">
+    <div class="card-title">💰 Pt獲得（リアル硬貨風）の候補</div>
+    <div class="btn-group">
+      <button class="btn-pt" onclick="playCoinA()">
+        候補 A
+        <span>澄んだ高音の1枚</span>
+      </button>
+      <button class="btn-pt" onclick="playCoinB()">
+        候補 B
+        <span>チャリンと2枚重なる</span>
+      </button>
+      <button class="btn-pt" onclick="playCoinC()">
+        候補 C
+        <span>500円玉のような重み</span>
       </button>
     </div>
-  );
-}
+  </div>
 
-function StatusListModal({ status, expressions, onClose }) {
-  const list = expressions.filter(e=>e.status===status);
-  const isL  = status==="学習中";
-  const ac   = isL?"#1CB0F6":"#888";
-  const bg   = isL?"#ddeeff":"#f0f0f0";
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:8000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
-      <div style={{background:"#fff",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:480,maxHeight:"80vh",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
-        <div style={{padding:"20px 20px 12px",borderBottom:"1px solid #EFEFEF",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{background:bg,color:ac,fontWeight:800,fontSize:12,borderRadius:99,padding:"2px 12px"}}>{status}</span>
-              <span style={{fontSize:20,fontWeight:900,color:"#2D2D2D"}}>{list.length}件</span>
-            </div>
-          </div>
-          <button onClick={onClose} style={{border:"none",background:"#f0f0f0",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#888"}}>
-            <Icons.Close/>
-          </button>
-        </div>
-        <div style={{overflowY:"auto",padding:"12px 16px 40px",display:"flex",flexDirection:"column",gap:8}}>
-          {list.length===0
-            ? <div style={{textAlign:"center",padding:"40px",color:"#aaa",fontSize:14}}>{status}の表現はありません</div>
-            : list.map(expr=>{
-              const cp = expr.attempts>0?Math.round(expr.correctCount/expr.attempts*100):null;
-              const cc = cp==null?"#ccc":cp>=70?"#58CC02":cp>=40?"#FFC800":"#FF4B4B";
-              return (
-                <div key={expr.id} style={{background:"#fff",border:"2px solid #EFEFEF",borderRadius:14,padding:"12px 14px"}}>
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:15,fontWeight:800}}>{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
-                      <div style={{fontSize:12,color:"#888",marginTop:3,lineHeight:1.5}}>{expr.meaning.split("。")[0]}</div>
-                      <div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:3}}>{expr.example}</div>
-                    </div>
-                    {cp!==null&&(
-                      <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                        <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          <Ring pct={cp} size={40} stroke={4} color={cc}/>
-                          <span style={{position:"absolute",fontSize:9,fontWeight:900,color:"#2D2D2D"}}>{cp}%</span>
-                        </div>
-                        <div style={{fontSize:9,color:"#bbb"}}>{expr.attempts}回</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          }
-        </div>
-      </div>
-    </div>
-  );
-}
+  <script>
+    let ctx; 
 
-const BATCH_SIZE = 10;
-
-function App() {
-  const [loaded,        setLoaded]        = useState(false);
-  const [gasError,      setGasError]      = useState(false);
-  const [tab,           setTab]           = useState("home"); 
-  const [exprs,         setExprs]         = useState([]);
-  const [quiz,          setQuiz]          = useState(null);
-  const [selected,      setSelected]      = useState(null);
-  const [isCorrect,     setIsCorrect]     = useState(null);
-  const [showFB,        setShowFB]        = useState(false);
-  const [playing,       setPlaying]       = useState(false);
-  const [confetti,      setConfetti]      = useState(false);
-  const [toast,         setToast]         = useState({ msg:"", on:false });
-  const [batch,         setBatch]         = useState([]);
-  const [showBatch,     setShowBatch]     = useState(false);
-  const [points,        setPoints]        = useState(0);
-  const [inputVal,      setInputVal]      = useState("");
-  const [normalStage,   setNormalStage]   = useState(1);
-
-  const exprsRef = useRef(exprs);
-  exprsRef.current = exprs;
-
-  useEffect(() => {
-    setPoints(lsGet(LS_POINTS, 0));
-    setNormalStage(lsGet(LS_STAGE, 1));
-
-    gasGet({ action:"getExpressions" })
-      .then(({ expressions }) => {
-        const data = (expressions && expressions.length) ? expressions : (lsGet(LS_EXPRS) || DUMMY);
-        setExprs(data);
-        lsSet(LS_EXPRS, data);
-        setLoaded(true);
-      })
-      .catch(() => {
-        setGasError(true);
-        setExprs(lsGet(LS_EXPRS) || DUMMY);
-        setLoaded(true);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (exprs.length) lsSet(LS_EXPRS, exprs);
-  }, [exprs]);
-
-  const pickQuiz = useCallback((list, targetTab) => {
-    const isW  = targetTab === "weak_quiz";
-    const pool = isW 
-      ? list.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7)
-      : list.filter(e => e.status !== "習得済み");
-
-    if (!pool.length) { setQuiz(null); return; }
-    const expr = pool[Math.floor(Math.random() * pool.length)];
-    setQuiz(generateQuiz(expr, list));
-    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal("");
-  }, []);
-
-  function showToast(msg) {
-    setToast({ msg, on:true });
-    setTimeout(()=>setToast(t=>({...t,on:false})), 2200);
-  }
-
-  function startSession(mode) {
-    setBatch([]);
-    setTab(mode);
-    pickQuiz(exprsRef.current, mode);
-  }
-
-  function handleAnswer(option) {
-    if (selected || !quiz) return;
-
-    const isWrite  = quiz.type === "writing";
-    const normalize = (str) => str.replace(/[.,?!]/g, '').trim().toLowerCase();
-    
-    const userAns  = isWrite ? normalize(option) : option.toLowerCase();
-    const rightAns = isWrite ? normalize(quiz.answer) : quiz.answer.toLowerCase();
-    const correct  = userAns === rightAns;
-
-    if (correct) {
-      const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
-      if (!isJapanese) speakText(option);
-      setConfetti(true); setTimeout(()=>setConfetti(false),1300);
-    } else {
-      playIncorrectSE(); // ★ 不正解時のマイルドなSE（読み上げはキャンセル）
+    // オーディオ初期化（自動再生ブロック回避）
+    function initAudio() {
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
     }
 
-    setSelected(option); setIsCorrect(correct); setShowFB(true);
-
-    const newExprs = exprs.map(e => {
-      if (e.id!==quiz.expression.id) return e;
-      return { ...e, attempts: e.attempts+1, correctCount: e.correctCount+(correct?1:0), status: e.status==="未学習"&&correct ? "学習中" : e.status };
-    });
-    setExprs(newExprs);
-    gasPost("updateStats", { phrase:quiz.expression.phrase, correct }).catch(()=>{});
-
-    const nb = [...batch, { expressionId:quiz.expression.id, correct }];
-    setBatch(nb);
-  }
-
-  function handleNext() {
-    playNextSE(); // ★ パキッとした次へSE＋振動
-    
-    if (batch.length >= BATCH_SIZE) {
-      setShowBatch(true);
-    } else {
-      pickQuiz(exprsRef.current, tab);
+    // 基本のトーン生成関数
+    function createTone(freq, type, startTime, duration, volStart, volEnd) {
+      initAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
     }
-  }
 
-  function handleBatchContinue(earnedPts) {
-    const newPts = points + earnedPts;
-    setPoints(newPts);
-    lsSet(LS_POINTS, newPts);
-    setShowBatch(false);
-    setBatch([]);
-    
-    if (tab === "quiz") {
-      const nextStage = normalStage + 1;
-      setNormalStage(nextStage);
-      lsSet(LS_STAGE, nextStage);
-      setTab("home");
-    } else if (tab === "weak_quiz") {
-      setTab("weak_home");
+    // 確定済みの不正解（マイルド＆癒やし系）
+    function playNg() {
+      createTone(300, 'sine', 0, 0.3, 0.15, 0.01);
+      createTone(250, 'sine', 0.15, 0.4, 0.15, 0.01);
     }
-  }
 
-  function handleMastered() {
-    playNextSE(); 
-    
-    const ne = exprs.map(e=>e.id===quiz.expression.id?{...e,status:"習得済み"}:e);
-    setExprs(ne);
-    showToast("⭐ 習得済みに登録しました！");
-    gasPost("updateStatus",{phrase:quiz.expression.phrase,status:"習得済み"}).catch(()=>{});
-    
-    if (batch.length >= BATCH_SIZE) setShowBatch(true);
-    else pickQuiz(ne, tab);
-  }
+    // 確定済みの次へ（パキッとしたポップな三角波）
+    function playNext() {
+      createTone(880, 'triangle', 0, 0.08, 0.15, 0.01);
+      createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
+    }
 
-  function handleRestore(id) {
-    const target = exprs.find(e=>e.id===id);
-    setExprs(prev=>prev.map(e=>e.id===id?{...e,status:"未学習"}:e));
-    showToast("↩ 未学習に戻しました");
-    if (target) gasPost("updateStatus",{phrase:target.phrase,status:"未学習"}).catch(()=>{});
-  }
+    /* ----------------------------------------------------
+       ここから「リアル硬貨」をシミュレートする専用関数
+       金属音＝複数の高い周波数のサイン波を重ねて鋭く減衰させる
+    ----------------------------------------------------- */
+    function playMetallicTone(freq, startTime, duration) {
+      initAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine'; // サイン波の重ね合わせで金属の共鳴を作る
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      
+      // 金属特有の「アタックが強く、すぐに消える」設定
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + startTime + 0.01); // 0.01秒で最大音量
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    }
 
-  function handleSpeak() {
-    if (!quiz) return;
-    setPlaying(true);
-    speakText(quiz.type==="example_blank"?quiz.expression.example:quiz.expression.phrase, ()=>setPlaying(false));
-  }
+    // 候補A：澄んだ高いベル・コイン音（100円玉が落ちたような音）
+    function playCoinA() {
+      playMetallicTone(2000, 0, 0.4);
+      playMetallicTone(2000 * 2.76, 0, 0.3); // 金属特有の不規則な倍音
+      playMetallicTone(2000 * 5.4, 0, 0.2);
+    }
 
-  const handleSearch = (phrase) => {
-    const query = encodeURIComponent(phrase + " 意味 使い方");
-    const url = `www.google.com/search?q=${query}`;
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
-    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) window.location.href = `googlechromes://${url}`;
-    else if (/android/i.test(ua)) window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end`;
-    else window.open(`https://${url}`, "_blank");
-  };
+    // 候補B：複数のコインが「チャリン」とぶつかる音（一番リアル寄り）
+    function playCoinB() {
+      // 1枚目の音
+      playMetallicTone(2500, 0, 0.3);
+      playMetallicTone(2500 * 2.1, 0, 0.2);
+      // ほんの少し遅れて2枚目がぶつかる音
+      playMetallicTone(2800, 0.05, 0.3);
+      playMetallicTone(2800 * 2.1, 0.05, 0.2);
+    }
 
-  const learned    = exprs.filter(e=>e.status==="習得済み");
-  const active     = exprs.filter(e=>e.status!=="習得済み");
-  const weakList   = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7); 
-  const masteredN  = learned.length;
-  const batchN     = batch.length;
-
-  if (!loaded) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:16}}>
-      <div style={{width:40,height:40,border:"4px solid #E5E5E5",borderTopColor:"#58CC02",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
-      <div style={{fontWeight:700,color:"#aaa",fontSize:15}}>データを読み込み中…</div>
-    </div>
-  );
-
-  return (
-    <div className="app">
-      <div className={`toast${toast.on?" on":""}`}>{toast.msg}</div>
-      <Confetti show={confetti}/>
-      {showBatch && <BatchModal batch={batch} expressions={exprs} onContinue={handleBatchContinue}/>}
-
-      {/* Header */}
-      {tab !== "quiz" && tab !== "weak_quiz" && (
-        <header className="top-header">
-          <div style={{fontSize:20,fontWeight:900,color:"#222"}}>English Quiz</div>
-          <div className="pts-badge">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#e5b400" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            {points}
-          </div>
-        </header>
-      )}
-
-      {gasError&&<div className="banner err">❌ GAS接続エラー — キャッシュで動作中</div>}
-
-      {/* ═══ HOME (通常マップ) ════════════ */}
-      {tab === "home" && (
-        <div className="map-container">
-          <div style={{textAlign:"center",marginBottom:20,padding:"0 20px"}}>
-            <h2 style={{fontSize:22,fontWeight:900,color:"#333"}}>UNIT {Math.floor((normalStage-1)/10)+1}</h2>
-            <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>スプレッドシートの単語をマスターしよう</p>
-          </div>
-          
-          <div className="map-path">
-            <div className="map-line">
-              <div className="map-line-fill" style={{height: normalStage === 1 ? "0%" : "25%"}}/>
-            </div>
-            {[...Array(5)].map((_, i) => {
-              const nodeStage = normalStage === 1 ? i + 1 : normalStage - 1 + i;
-              const isCurrent = nodeStage === normalStage;
-              const isCleared = nodeStage < normalStage;
-              const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
-              
-              return (
-                <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shift})`}}>
-                  {isCurrent && (
-                    <div className="map-start-btn" onClick={() => startSession("quiz")}>START</div>
-                  )}
-                  <div 
-                    className={`map-node ${isCurrent ? 'current' : isCleared ? 'cleared' : 'locked'}`}
-                    onClick={() => isCurrent ? startSession("quiz") : null}
-                  >
-                    {isCleared ? <Icons.Check/> : <Icons.Star/>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ═══ WEAK HOME (苦手マップ) ════════════ */}
-      {tab === "weak_home" && (
-        <div className="map-container" style={{background:"#fff5f5"}}>
-          <div style={{textAlign:"center",marginBottom:20,padding:"0 20px"}}>
-            <h2 style={{fontSize:22,fontWeight:900,color:"var(--red)"}}>苦手克服タワー</h2>
-            <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>残りの苦手な表現：<strong>{weakList.length}個</strong></p>
-          </div>
-          
-          {weakList.length === 0 ? (
-            <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",textAlign:"center",gap:14}}>
-              <div style={{fontSize:56}}>✨</div>
-              <div style={{fontSize:20,fontWeight:900}}>タワー崩壊！</div>
-              <div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>正答率70%未満の表現はありません。<br/>素晴らしい定着率です！</div>
-            </div>
-          ) : (
-            <div className="map-path">
-              <div className="map-line" style={{background:"#ffcccc"}}>
-                <div className="map-line-fill" style={{background:"var(--red)", height:"0%"}}/>
-              </div>
-              {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i, arr) => {
-                const nodeStage = arr.length - i; 
-                const isCurrent = nodeStage === 1; 
-                const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
-                
-                return (
-                  <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shift})`}}>
-                    {isCurrent && (
-                      <div className="map-start-btn weak" onClick={() => startSession("weak_quiz")}>CHALLENGE!</div>
-                    )}
-                    <div 
-                      className={`map-node ${isCurrent ? 'weak' : 'locked'}`}
-                      onClick={() => isCurrent ? startSession("weak_quiz") : null}
-                    >
-                      <Icons.Alert/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══ QUIZ ＆ WEAK TAB ════════════ */}
-      {(tab==="quiz" || tab==="weak_quiz")&&(
-        <div className="scroll" style={{paddingBottom: 40}}>
-          <div className="bdots">
-            {Array.from({length:BATCH_SIZE},(_,i)=>{
-              const ans = batch[i]; 
-              return <div key={i} className={`bdot${ans?(ans.correct?" ok":" ng"):""}`}/>;
-            })}
-          </div>
-
-          {quiz ? (
-            <>
-              <div className="qcard">
-                <div className={`qbadge ${quiz.type==="multiple_choice"?"mc":quiz.type==="fill_blank"?"fb":quiz.type==="meaning_match"?"mm":quiz.type==="listening"?"ls":quiz.type==="writing"?"wr":"ex"}`}>
-                  {quiz.type==="multiple_choice"&&"✦ 選択クイズ"}
-                  {quiz.type==="fill_blank"&&"✦ 穴埋めクイズ"}
-                  {quiz.type==="meaning_match"&&"✦ 意味マッチング"}
-                  {quiz.type==="listening"&&"🎧 リスニング"}
-                  {quiz.type==="example_blank"&&"📝 例文穴埋め"}
-                  {quiz.type==="writing"&&"✍️ タイピング問題"}
-                </div>
-                
-                <div className="qquestion">{quiz.question}</div>
-                {quiz.type==="multiple_choice"&&<div className="qphrase">"{quiz.expression.phrase}"</div>}
-                {quiz.type==="fill_blank"&&<><div className="blank-box">{quiz.phrase}</div><div className="sub-info">{quiz.subInfo}</div></>}
-                {quiz.type==="meaning_match"&&<div className="mhint">💬 {quiz.meaningHint}</div>}
-                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"タップして音声を再生"}</button>}
-                {quiz.type==="writing"&&<><div className="mhint" style={{fontSize:"18px",margin:"10px 0 6px",color:"#111"}}>💡 {quiz.meaningHint}</div><div style={{fontSize:"12px",color:"var(--muted)"}}>※フレーズ全体を正しく入力してください</div></>}
-                {quiz.type==="example_blank"&&<><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>}
-              </div>
-
-              {quiz.type === "writing" ? (
-                <form className="write-form" onSubmit={e=>{ e.preventDefault(); if(inputVal.trim() && selected===null) handleAnswer(inputVal); }}>
-                  <input className="write-input" type="text" value={inputVal} onChange={e=>setInputVal(e.target.value)} disabled={selected!==null} placeholder="英語フレーズを入力..." autoFocus/>
-                  <button className="btn-submit-write" type="submit" disabled={selected!==null || !inputVal.trim()}>回答</button>
-                </form>
-              ) : (
-                <div className="opts">
-                  {quiz.options.map((opt,i)=>{
-                    let cls="opt";
-                    if(selected){ if(opt.toLowerCase()===quiz.answer.toLowerCase()) cls+=" ok"; else if(opt===selected) cls+=" ng"; }
-                    return <button key={i} className={cls} onClick={()=>handleAnswer(opt)} disabled={!!selected}>{opt}</button>;
-                  })}
-                </div>
-              )}
-
-              {showFB&&(
-                <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
-                  <div className="fdbk-ttl">{isCorrect?<><Icons.Check/> 正解！</>:<><Icons.Cross/> 不正解…</>}</div>
-                  <div className="fdbk-body">
-                    {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span></> : <span><strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span>}
-                    <br/>{quiz.expression.meaning}
-                  </div>
-                  <div className="fdbk-ex">
-                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>🇯🇵 {quiz.expression.exampleJa}
-                  </div>
-                </div>
-              )}
-
-              <div className="btns">
-                {selected&&(
-                  <>
-                    <button className={`btn ${batchN >= BATCH_SIZE ? "btn-result" : "btn-next"}`} onClick={handleNext}>
-                      {batchN >= BATCH_SIZE ? "結果を見る →" : "次の問題へ →"}
-                    </button>
-                    <button className="btn btn-master" onClick={handleMastered}><Icons.Star/> この表現はもう覚えた！</button>
-                  </>
-                )}
-                <div className="btn-link-wrap">
-                  <button className="btn-src" onClick={()=>window.open(quiz.expression.url,"_blank")}><Icons.Link/> 動画を見る</button>
-                  <button className="btn-src" onClick={()=>handleSearch(quiz.expression.phrase)}><Icons.Search/> Webで検索</button>
-                </div>
-              </div>
-            </>
-          ):null}
-        </div>
-      )}
-
-      {/* ═══ LEARNED TAB ════════════ */}
-      {tab==="learned"&&(
-        <div className="scroll">
-          <div className="ll-hdr"><div className="ll-title">⭐ 習得済みリスト</div><div className="ll-sub">「戻す」で未学習に復元できます</div></div>
-          {learned.length===0?(
-            <div style={{padding:"60px 24px",textAlign:"center"}}><div style={{fontSize:48,marginBottom:14}}>🌱</div><div style={{fontSize:15,color:"var(--muted)",fontWeight:600,lineHeight:1.75}}>まだ習得済みの表現がありません。</div></div>
-          ):(
-            <div className="ll-list">
-              {learned.map(expr=>{
-                return (
-                  <div key={expr.id} className="ll-item">
-                    <div className="ll-icon"><Icons.Star/></div>
-                    <div className="ll-body">
-                      <div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
-                      <div className="ll-meaning">{expr.meaning.split("。")[0]}</div>
-                      <div className="ll-ex">{expr.example}</div>
-                    </div>
-                    <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><Icons.Refresh/> 戻す</button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bottom Nav */}
-      {(tab === "home" || tab === "weak_home" || tab === "learned") && (
-        <nav className="nav">
-          <button className={`ntab${tab==="home"?" on":""}`} onClick={()=>setTab("home")}>
-            <Icons.Map/> ステージ
-          </button>
-          <button className={`ntab${tab==="weak_home"?" on":""}`} onClick={()=>setTab("weak_home")}>
-            <div style={{position:"relative"}}>
-              <Icons.Alert/>
-              {weakList.length > 0 && <span style={{position:"absolute",top:-8,right:-12}} className="badge-red">{weakList.length}</span>}
-            </div>
-            苦手克服
-          </button>
-          <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}>
-            <Icons.Star/> 習得済み
-          </button>
-        </nav>
-      )}
-    </div>
-  );
-}
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App/>);
-</script>
+    // 候補C：少し重みのある硬貨（500円玉のようなジャラッとした音）
+    function playCoinC() {
+      playMetallicTone(1200, 0, 0.5);
+      playMetallicTone(1200 * 2.5, 0, 0.4);
+      playMetallicTone(1200 * 4.2, 0, 0.3);
+      
+      playMetallicTone(1500, 0.08, 0.4);
+      playMetallicTone(1500 * 2.5, 0.08, 0.3);
+    }
+  </script>
 </body>
 </html>
