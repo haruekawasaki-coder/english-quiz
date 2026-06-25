@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>SE試聴ツール（微調整＆超速レスポンス編）</title>
+  <title>SE試聴ツール（次へボタン最終選考編）</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
   <style>
     body { font-family: 'Nunito', sans-serif; background: #f5f5f5; color: #333; padding: 20px; max-width: 500px; margin: 0 auto; padding-bottom: 50px; touch-action: manipulation; }
@@ -16,7 +16,6 @@
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-full { grid-column: span 2; }
 
-    /* touch-action: manipulation でスマホのタップ遅延を防止 */
     button { touch-action: manipulation; padding: 16px 12px; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; color: #fff; transition: transform 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; -webkit-tap-highlight-color: transparent;}
     button:active { transform: translateY(3px); }
     button span { font-size: 11px; opacity: 0.9; font-weight: 600; text-align: center; line-height: 1.3; }
@@ -28,48 +27,48 @@
 </head>
 <body>
 
-  <h1>🎵 SE試聴ツール（超速レスポンス編）</h1>
+  <h1>🎵 SE試聴ツール（次へボタン最終選考）</h1>
   <p class="desc">
     ※スマホのサイレントモードを解除してください。<br>
-    ラグをなくすため、指が触れた瞬間に鳴るようにしています。
+    画面に触れた瞬間に最速で音が鳴ります。
   </p>
 
   <div class="card">
-    <div class="card-title">💰 Pt獲得（確定）</div>
+    <div class="card-title">✅ 確定済みのSE</div>
     <div class="grid">
-      <button class="btn-pt grid-full" onpointerdown="playCoinDoubleA()">
-        確定版 Pt獲得
+      <button class="btn-pt" onpointerdown="playCoinDoubleA()">
+        確定：Pt獲得
         <span>チャリーン！(硬貨2枚)</span>
+      </button>
+      <button class="btn-ng" onpointerdown="playNgConfirmed()">
+        確定：不正解
+        <span>ポロン♪(ずらして和音)</span>
       </button>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">❌ 不正解の候補（ベース: 木琴ポコン）</div>
+    <div class="card-title">⏩ 次へボタンの最終候補（3種類）</div>
     <div class="grid">
-      <button class="btn-ng" onpointerdown="playNg1()">候補 1<span>ベース<br>(前回の候補2そのまま)</span></button>
-      <button class="btn-ng" onpointerdown="playNg2()">候補 2<span>低音強め<br>(より打楽器っぽい)</span></button>
-      <button class="btn-ng" onpointerdown="playNg3()">候補 3<span>短くコロッ<br>(歯切れの良い音)</span></button>
-      <button class="btn-ng" onpointerdown="playNg4()">候補 4<span>ポロン<br>(2つの音を少しずらす)</span></button>
-      <button class="btn-ng" onpointerdown="playNg5()">候補 5<span>三角波<br>(少し柔らかい木琴)</span></button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">⏩ 次へボタンの候補（ベース: ピロ）</div>
-    <div class="grid">
-      <button class="btn-next" onpointerdown="playNext1()">候補 1<span>ベース<br>(前回の候補3そのまま)</span></button>
-      <button class="btn-next" onpointerdown="playNext2()">候補 2<span>高音軽快<br>(少し高い音にする)</span></button>
-      <button class="btn-next" onpointerdown="playNext3()">候補 3<span>スピードUP<br>(より素早いピロッ)</span></button>
-      <button class="btn-next" onpointerdown="playNext4()">候補 4<span>スライド上昇<br>(ピュイッとなめらか)</span></button>
-      <button class="btn-next" onpointerdown="playNext5()">候補 5<span>三角波<br>(ピコッとした電子音寄り)</span></button>
+      <button class="btn-next grid-full" onpointerdown="playNext1()">
+        候補 1：ティロン↑
+        <span>前回の候補1（パキッとしたポップな三角波）</span>
+      </button>
+      <button class="btn-next" onpointerdown="playNext4()">
+        候補 4：カチッ
+        <span>前回の候補4（メカニカル・通常のスピード）</span>
+      </button>
+      <button class="btn-next" onpointerdown="playNext4Slow()">
+        候補 4（ゆっくり版）
+        <span>【新設】間隔を広げた落ち着いたメカニカル音</span>
+      </button>
     </div>
   </div>
 
   <script>
     let ctx; 
 
-    // 画面のどこかを触った瞬間にオーディオをスタンバイ（ラグ防止）
+    // 画面タップでオーディオを最速スタンバイ
     document.addEventListener('pointerdown', () => {
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === 'suspended') ctx.resume();
@@ -86,25 +85,6 @@
       const gain = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
-      // ラグを無くすためアタック(立ち上がり)を0.01秒に短縮
-      gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + startTime);
-      osc.stop(ctx.currentTime + startTime + duration);
-    }
-
-    // 周波数を滑らかに変化させる特殊トーン（スライド用）
-    function createSlideTone(freqStart, freqEnd, type, startTime, duration, volStart, volEnd) {
-      initAudio();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freqStart, ctx.currentTime + startTime);
-      osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + startTime + duration);
-      
       gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
       gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
@@ -129,7 +109,7 @@
       osc.stop(ctx.currentTime + startTime + duration);
     }
 
-    // 💰 確定版 Pt獲得
+    // 💰 確定：Pt獲得
     function playCoinDoubleA() {
       playMetallicTone(2000, 0, 0.4);
       playMetallicTone(2000 * 2.76, 0, 0.3);
@@ -139,47 +119,29 @@
       playMetallicTone(2200 * 5.4, 0.06, 0.2);
     }
 
-    // ❌ 不正解のバリエーション (ベース: 350Hz & 150Hz sine)
-    function playNg1() { // ベース（前回の候補2そのまま）
-      createTone(350, 'sine', 0, 0.1, 0.3, 0.001);
-      createTone(150, 'sine', 0, 0.1, 0.3, 0.001);
-    }
-    function playNg2() { // 低音強め（300Hz & 100Hz）
-      createTone(300, 'sine', 0, 0.1, 0.3, 0.001);
-      createTone(100, 'sine', 0, 0.15, 0.4, 0.001);
-    }
-    function playNg3() { // さらに短く（コロッ）
-      createTone(350, 'sine', 0, 0.05, 0.3, 0.001);
-      createTone(150, 'sine', 0, 0.05, 0.3, 0.001);
-    }
-    function playNg4() { // ずらして和音（ポロン）
+    // ❌ 確定：不正解（前回の候補4・ずらして和音）
+    function playNgConfirmed() {
       createTone(350, 'sine', 0, 0.1, 0.3, 0.001);
       createTone(200, 'sine', 0.03, 0.1, 0.3, 0.001);
     }
-    function playNg5() { // 三角波（少しだけ電子音寄り・柔らかい）
-      createTone(350, 'triangle', 0, 0.1, 0.2, 0.001);
-      createTone(150, 'triangle', 0, 0.1, 0.2, 0.001);
+
+    // ⏩ 次へ 候補1：ティロン↑
+    function playNext1() {
+      createTone(880, 'triangle', 0, 0.08, 0.15, 0.01);
+      createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
     }
 
-    // ⏩ 次へのバリエーション (ベース: 400Hz -> 600Hz sine)
-    function playNext1() { // ベース（前回の候補3そのまま）
-      createTone(400, 'sine', 0, 0.05, 0.1, 0.01);
-      createTone(600, 'sine', 0.05, 0.1, 0.1, 0.01);
+    // ⏩ 次へ 候補4：カチッ（通常版）
+    function playNext4() {
+      createTone(1000, 'square', 0, 0.03, 0.05, 0.001);
+      createTone(1200, 'square', 0.05, 0.03, 0.05, 0.001);
     }
-    function playNext2() { // 高音軽快 (500Hz -> 800Hz)
-      createTone(500, 'sine', 0, 0.05, 0.1, 0.01);
-      createTone(800, 'sine', 0.05, 0.1, 0.1, 0.01);
-    }
-    function playNext3() { // スピードアップ（間隔を0.03秒に）
-      createTone(400, 'sine', 0, 0.04, 0.1, 0.01);
-      createTone(600, 'sine', 0.03, 0.08, 0.1, 0.01);
-    }
-    function playNext4() { // スライド上昇（ピュイッとなめらか）
-      createSlideTone(400, 800, 'sine', 0, 0.1, 0.1, 0.001);
-    }
-    function playNext5() { // 三角波（ピコッとした電子音寄り）
-      createTone(400, 'triangle', 0, 0.05, 0.1, 0.01);
-      createTone(600, 'triangle', 0.05, 0.1, 0.1, 0.01);
+
+    // ⏩ 次へ 候補4：カチッ（★新設：ゆっくり版）
+    function playNext4Slow() {
+      // 音の間隔を0.05秒から0.11秒に広げ、音の長さをほんの少し伸ばして余韻を作りました
+      createTone(950, 'square', 0, 0.04, 0.05, 0.001);
+      createTone(1150, 'square', 0.11, 0.04, 0.05, 0.001);
     }
   </script>
 </body>
