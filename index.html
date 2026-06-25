@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (SE・全機能 最終完全版)</title>
+  <title>English Quiz (SE強制アンロック対応版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -175,9 +175,9 @@ async function gasPost(action, data) {
   return res.json();
 }
 
-const LS_EXPRS  = "quiz-exprs-v10";
-const LS_STAGE  = "quiz-stage-v10";
-const LS_POINTS = "quiz-points-v10";
+const LS_EXPRS  = "quiz-exprs-v11";
+const LS_STAGE  = "quiz-stage-v11";
+const LS_POINTS = "quiz-points-v11";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -196,12 +196,35 @@ const YEASTKENS = [
   { name: "ゴールデントースト", iconUrl: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", fallback: "🍞🦮", msg: "こんがりサクッとクリア！天才！" }
 ];
 
-// ★ SEオーディオ基盤（最速レスポンス対応）
-let audioCtx = null;
+// ==========================================
+// ★ SE・オーディオ基盤（iPhone無音ブロック完全回避版）
+// ==========================================
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
+  if (!window.quizAudioCtx) {
+    window.quizAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (window.quizAudioCtx.state === 'suspended') {
+    window.quizAudioCtx.resume();
+  }
+  return window.quizAudioCtx;
+}
+
+// iPhoneのブラウザ制限を解除するための「初回タップ時の無音再生」
+function unlockAudio() {
+  try {
+    const ctx = initAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.value = 0; // 完全な無音
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(0);
+    osc.stop(ctx.currentTime + 0.001);
+    
+    // 一度解除したら不要なのでリスナーを消す
+    document.removeEventListener('pointerdown', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+  } catch(e) {}
 }
 
 function createTone(freq, type, startTime, duration, volStart, volEnd) {
@@ -229,7 +252,6 @@ function createSlideTone(freqStart, freqEnd, type, startTime, duration, volStart
     osc.type = type;
     osc.frequency.setValueAtTime(freqStart, ctx.currentTime + startTime);
     osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + startTime + duration);
-    
     gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
     gain.gain.linearRampToValueAtTime(volStart, ctx.currentTime + startTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(volEnd, ctx.currentTime + startTime + duration);
@@ -257,7 +279,7 @@ function playMetallicTone(freq, startTime, duration) {
   } catch(e) {}
 }
 
-// 💰 Pt獲得：チャリーン！(候補Aの2枚重ね)
+// 💰 Pt獲得：チャリーン！(硬貨2枚重ね)
 function playPtSE() {
   if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
   playMetallicTone(2000, 0, 0.4);
@@ -280,12 +302,15 @@ function playOkSE() {
   createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
 }
 
-// ⏩ 次へ・覚えたボタン：スライド上昇（ピュイッ、オリジナル0.1秒）
+// ⏩ 次へ・覚えたボタン：スライド上昇（ピュイッ、0.1秒）
 function playNextSE() {
   if (navigator.vibrate) navigator.vibrate([30]);
   createSlideTone(400, 800, 'sine', 0, 0.1, 0.1, 0.001);
 }
 
+// ==========================================
+// 音声合成 (SpeechSynthesis)
+// ==========================================
 function speakText(text, onEnd) {
   if (!window.speechSynthesis) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
@@ -312,7 +337,8 @@ const Icons = {
   Link:    () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
   Speaker: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.5em",height:"1.5em"}}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
   Search:  () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>
+  Refresh: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"1em",height:"1em"}}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/></svg>,
+  Close:   () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:"1.1em",height:"1.1em"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 };
 
 const Confetti = ({ show }) => {
@@ -365,7 +391,7 @@ const formatOpt = (str) => {
   return s;
 };
 
-// 賢いフレーズ抽出（離れた単語や変化した動詞も特定）
+// 賢いフレーズ抽出
 function extractDynamicPhrase(phrase, sentence) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const getFuzzyPat = (w) => {
@@ -531,7 +557,7 @@ function BatchModal({ batch, expressions, onContinue }) {
         </div>
       </div>
 
-      <button onClick={() => { playPtSE(); onContinue(pointsEarned); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0,touchAction:"manipulation"}}>
+      <button onClick={() => { playPtSE(); setTimeout(()=>onContinue(pointsEarned), 100); }} style={{marginTop:24,width:"100%",border:"none",borderRadius:16,padding:"18px",background:"var(--blue)",color:"#fff",fontFamily:"inherit",fontSize:16,fontWeight:900,cursor:"pointer",boxShadow:"0 4px 0 var(--bd)",flexShrink:0,touchAction:"manipulation"}}>
         {pointsEarned}ptゲットしてマップに戻る
       </button>
     </div>
@@ -615,8 +641,9 @@ function App() {
   exprsRef.current = exprs;
 
   useEffect(() => {
-    const handlePointerDown = () => initAudio();
-    document.addEventListener('pointerdown', handlePointerDown, { once: true });
+    // ★ iPhoneの「無音ブロック」を解除するための仕組み
+    document.addEventListener('pointerdown', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
 
     setPoints(lsGet(LS_POINTS, 0));
     setNormalStage(lsGet(LS_STAGE, 1));
@@ -634,7 +661,10 @@ function App() {
         setLoaded(true);
       });
 
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    }
   }, []);
 
   useEffect(() => {
@@ -675,12 +705,15 @@ function App() {
     const correct  = userAns === rightAns;
 
     if (correct) {
+      playOkSE(); // ★ 先にSEを鳴らす
       const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
-      if (!isJapanese) speakText(option);
-      playOkSE(); // 正解時のティロン↑
+      if (!isJapanese) {
+        // ★ SEと重なって消されるのを防ぐため、0.2秒待ってから発音
+        setTimeout(() => speakText(option), 200);
+      }
       setConfetti(true); setTimeout(()=>setConfetti(false),1300);
     } else {
-      playNgSE(); // 不正解のポロン
+      playNgSE(); // ★ 不正解時のポロン
     }
 
     setSelected(option); setIsCorrect(correct); setShowFB(true);
