@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (完全修正・フル搭載版)</title>
+  <title>English Quiz (自動採点＆動くスタンプ搭載版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -25,17 +25,14 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;}
     
-    /* Header */
     .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;flex-shrink:0;}
     .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
     
-    /* Nav */
     .nav{background:var(--card);border-top:2px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100;flex-shrink:0;}
     .ntab{flex:1;padding:12px 2px 10px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:10px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;border-top:3px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
     .ntab.on{color:var(--blue);border-top-color:var(--blue);}
     .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:9px;font-weight:900;}
 
-    /* Map UI */
     .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:40px 0 80px;background:#f0f5f0;position:relative;}
     .map-path{display:flex;flex-direction:column-reverse;align-items:center;gap:40px;position:relative;width:100%;margin-top:20px;}
     .map-line{position:absolute;top:30px;bottom:30px;width:12px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
@@ -47,18 +44,19 @@
     .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-node.weak{background:var(--red);color:#fff;box-shadow:0 6px 0 var(--rd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-start-btn{position:absolute;top:-50px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
+    .map-start-btn.weak{color:var(--red);}
     .map-start-btn::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
-    .floating-char{position:absolute;width:60px;height:60px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:1;opacity:0.9;}
+    .floating-char{position:absolute;width:65px;height:65px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:1;}
     @keyframes floatChar{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-15px) rotate(5deg)}}
     @keyframes float{0%,100%{transform:scale(1.15) translateY(0)}50%{transform:scale(1.15) translateY(-6px)}}
     @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
 
-    /* Quiz Area */
     .bdots{display:flex;gap:6px;justify-content:center;padding:10px 16px 4px;}
     .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
     .bdot.ng{background:var(--red);}
     .bdot.cur{background:var(--blue);transform:scale(1.3);}
+    
     .qcard{margin:10px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
     .qbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:99px;padding:3px 12px;margin-bottom:10px;}
     .qbadge.mc{background:#d7f5b1;color:#3a9100;}
@@ -88,20 +86,21 @@
     .opt{border:2.5px solid var(--border);border-radius:var(--r);padding:13px 18px;background:var(--card);font-family:inherit;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;box-shadow:0 3px 0 var(--border);-webkit-tap-highlight-color:transparent;outline:none;}
     .opt.ok{border-color:var(--green)!important;background:var(--gpale)!important;color:var(--gd)!important;box-shadow:0 3px 0 var(--gd)!important;}
     .opt.ng{border-color:var(--red)!important;background:#ffe5e5!important;color:var(--rd)!important;box-shadow:0 3px 0 var(--rd)!important;animation:shake .3s;}
+    .opt.locked{background:#f9f9f9!important;border-color:#eee!important;color:#ccc!important;box-shadow:none!important;cursor:default;}
     .opt:disabled{cursor:default;}
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
     
     .write-form{display:flex;flex-direction:column;gap:10px;margin:8px 16px 0;}
-    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;resize:vertical;min-height:80px;}
+    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;resize:vertical;min-height:70px;}
     .write-input:focus{border-color:var(--blue);}
     .write-input:disabled{background:#eef1f5;color:var(--muted);border-color:#d5d9e0;box-shadow:none;}
     .btn-submit-write{border:none;border-radius:12px;padding:14px 24px;font-family:inherit;font-size:15px;font-weight:800;background:var(--blue);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--bd);transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;}
     .btn-submit-write:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 var(--bd);}
     .btn-submit-write:disabled{background:var(--border);box-shadow:none;cursor:default;}
+    .btn-submit-write.playing{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);animation:spulse 1s infinite;}
 
     .skip-btn{background:none;border:2px solid var(--border);border-radius:12px;padding:10px;font-family:inherit;font-size:14px;font-weight:800;color:var(--muted);cursor:pointer;margin:0 16px;display:flex;align-items:center;justify-content:center;gap:6px;}
 
-    /* Feedback */
     .fdbk{margin:10px 16px 0;border-radius:var(--r);padding:13px 16px;border:2px solid;animation:sup .28s cubic-bezier(.34,1.56,.64,1);}
     .fdbk.ok{background:var(--gpale);border-color:var(--green);}
     .fdbk.ng{background:#ffe5e5;border-color:var(--red);}
@@ -121,6 +120,9 @@
     .btn-master{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);}
     .btn-master:active{transform:translateY(2px);box-shadow:0 2px 0 var(--yd);}
     
+    .btn-link-wrap{display:flex;gap:8px;}
+    .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
+    
     /* Shop & Collection */
     .shop-item{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:16px;margin-bottom:12px;box-shadow:0 4px 0 var(--border);}
     .shop-icon{font-size:32px;background:#f0f5f0;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
@@ -135,7 +137,7 @@
     .col-item{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;}
     .col-img{width:70px;height:70px;object-fit:contain;margin-bottom:8px;}
     .col-img.locked{filter:brightness(0) invert(0.8);}
-    .col-name{font-size:11px;font-weight:800;color:#333;margin-bottom:4px;height:28px;display:flex;align-items:center;}
+    .col-name{font-size:11px;font-weight:800;color:#333;margin-bottom:4px;height:28px;display:flex;align-items:center;justify-content:center;line-height:1.2;}
     .col-count{font-size:10px;color:var(--muted);font-weight:700;}
 
     /* Modal */
@@ -146,7 +148,8 @@
     .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
     .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
-    .yeastken-img{width:160px;height:160px;object-fit:contain;margin:10px 0;animation:floatChar 2s infinite ease-in-out alternate;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .yeastken-img{width:140px;height:140px;object-fit:contain;margin:10px 0;animation:floatChar 2s infinite ease-in-out alternate;}
   </style>
 </head>
 <body>
@@ -155,19 +158,18 @@
 <script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useCallback, useRef } = React;
 
-// ★ 定数を一番上に配置して迷子を防ぐ
 const BATCH_SIZE = 10;
-
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwu8KtiWduIE_Bp9OSYP0DoUIvc8WTeF660uWqLOuOCCu6dn8BjqFzJrYvUmYl8hhhpMQ/exec";
-const LS_EXPRS  = "quiz-exprs-v14";
-const LS_STAGE  = "quiz-stage-v14";
-const LS_POINTS = "quiz-points-v14";
-const LS_CHARS  = "quiz-chars-v14";
-const LS_COUNTS = "quiz-counts-v14";
-const LS_LOGIN  = "quiz-login-v14";
 
 async function gasGet(params) { const url = GAS_URL + "?" + new URLSearchParams(params); const res = await fetch(url); return res.json(); }
 async function gasPost(action, data) { const body = new URLSearchParams({ action, data: JSON.stringify(data) }); const res = await fetch(GAS_URL, { method:"POST", body }); return res.json(); }
+
+const LS_EXPRS  = "quiz-exprs-v15";
+const LS_STAGE  = "quiz-stage-v15";
+const LS_POINTS = "quiz-points-v15";
+const LS_CHARS  = "quiz-chars-v15";
+const LS_COUNTS = "quiz-counts-v15";
+const LS_LOGIN  = "quiz-login-v15";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -178,19 +180,18 @@ const DUMMY = [
   { id:3, phrase:"bite off more than you can chew", meaning:"手に負えないほど多くのことを引き受ける", example:"He bit off more than he could chew.", exampleJa:"彼は手に負えなくなった。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
+// ★ 新しいスタンプ群（APNG対応：IOS/main_animation@2x.png、非対応絵文字は静止画）
 const CHARACTERS = [
-  { id: "y1", name: "しばこっぺ", url: "https://stickershop.line-scdn.net/stickershop/v1/product/1883488/LINEStorePC/main.png", series: "いーすとけん" },
-  { id: "y2", name: "サモメロン", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/19089851/android/sticker.png", series: "いーすとけん" },
-  { id: "y3", name: "とさあんこ", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/19089852/android/sticker.png", series: "いーすとけん" },
-  { id: "y4", name: "ゴールデントースト", url: "https://stickershop.line-scdn.net/stickershop/v1/product/30225616/LINEStorePC/main.png", series: "いーすとけん" },
-  { id: "n1", name: "ひとえうさぎ", url: "https://stickershop.line-scdn.net/stickershop/v1/product/14457/LINEStorePC/main.png", series: "ningen_life" },
-  { id: "n2", name: "きせかえうさぎ", url: "https://stickershop.line-scdn.net/stickershop/v1/product/20697920/LINEStorePC/main.png", series: "ningen_life" },
-  { id: "b1", name: "Buddle Puppy 1", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/13032766/IOS/sticker_animation@2x.png", series: "buddle puppy" },
-  { id: "b2", name: "Buddle Puppy 2", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/13032767/IOS/sticker_animation@2x.png", series: "buddle puppy" },
-  { id: "d1", name: "あんまりつよくない", url: "https://stickershop.line-scdn.net/stickershop/v1/product/15456381/LINEStorePC/main.png", series: "あんまりつよくないきょうりゅう" },
-  { id: "d2", name: "きょうりゅう", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/126938952/android/sticker.png", series: "あんまりつよくないきょうりゅう" },
-  { id: "dh1", name: "恐竜はじめました", url: "https://stickershop.line-scdn.net/stickershop/v1/product/36636734/LINEStorePC/main.png", series: "恐竜はじめました" },
-  { id: "dh2", name: "やさしい恐竜", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/293847592/android/sticker.png", series: "恐竜はじめました" }
+  { id: "c1", name: "buddle puppy", url: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/LINEStorePC/main.png" },
+  { id: "c2", name: "いーすとけん 絵文字", url: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png", fallback: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png" },
+  { id: "c3", name: "buddle puppy 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/30902982/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/30902982/LINEStorePC/main.png" },
+  { id: "c4", name: "あんまりつよくない", url: "https://stickershop.line-scdn.net/stickershop/v1/product/34430061/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/34430061/LINEStorePC/main.png" },
+  { id: "c5", name: "恐竜はじめました", url: "https://stickershop.line-scdn.net/stickershop/v1/product/34162445/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/34162445/LINEStorePC/main.png" },
+  { id: "c6", name: "ningen_life 1", url: "https://stickershop.line-scdn.net/stickershop/v1/product/30285812/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/30285812/LINEStorePC/main.png" },
+  { id: "c7", name: "ningen_life 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/33942780/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/33942780/LINEStorePC/main.png" },
+  { id: "c8", name: "いーすとけん", url: "https://stickershop.line-scdn.net/stickershop/v1/product/33696321/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/33696321/LINEStorePC/main.png" },
+  { id: "c9", name: "buddle puppy 3", url: "https://stickershop.line-scdn.net/stickershop/v1/product/32230896/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/32230896/LINEStorePC/main.png" },
+  { id: "c10", name: "あんまりつよくない 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/31852012/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/31852012/LINEStorePC/main.png" }
 ];
 
 let audioCtx = null;
@@ -202,10 +203,8 @@ function initAudio() {
 function unlockAudio() {
   try {
     const ctx = initAudio();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    osc.connect(gain); gain.connect(ctx.destination);
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    gain.gain.value = 0; osc.connect(gain); gain.connect(ctx.destination);
     osc.start(0); osc.stop(ctx.currentTime + 0.001);
     document.removeEventListener('pointerdown', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
@@ -359,15 +358,17 @@ const formatOpt = (str) => {
   return s;
 };
 
-function extractDynamicPhrase(phrase, sentence) {
+// ★ ファジー検索で語形変化対応
+function getFuzzyPat(w) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const getFuzzyPat = (w) => {
-    let pat = escapeRegExp(w);
-    if (w.length >= 4) pat = escapeRegExp(w.slice(0, 3)) + "[a-z]{0,5}";
-    else if (w.length === 3) pat = escapeRegExp(w.slice(0, 2)) + "[a-z]{0,4}";
-    else pat = escapeRegExp(w) + "[a-z]{0,2}";
-    return "\\b" + pat + "\\b";
-  };
+  let pat = escapeRegExp(w);
+  if (w.length >= 4) pat = escapeRegExp(w.slice(0, 3)) + "[a-z]{0,5}";
+  else if (w.length === 3) pat = escapeRegExp(w.slice(0, 2)) + "[a-z]{0,4}";
+  else pat = escapeRegExp(w) + "[a-z]{0,2}";
+  return "\\b" + pat + "\\b";
+}
+
+function extractDynamicPhrase(phrase, sentence) {
   const words = phrase.split(/\s+/).filter(w => w.length > 0);
   const presentWords = [];
   words.forEach(w => { if (new RegExp(getFuzzyPat(w), "ig").test(sentence)) presentWords.push(w); });
@@ -468,7 +469,7 @@ function BatchModal({ batch, expressions, onContinue, unlockedChars }) {
         
         {yeastken && (
           <div style={{margin:"10px 0"}}>
-            <img src={yeastken.url} className="yeastken-img" alt={yeastken.name} onError={(e)=>{e.target.style.display='none'}}/>
+            <img src={yeastken.url} className="yeastken-img" alt={yeastken.name} onError={(e)=>{if(e.target.src!==yeastken.fallback)e.target.src=yeastken.fallback;}}/>
             <div style={{fontSize:16,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
           </div>
         )}
@@ -520,7 +521,7 @@ function LoginBonusModal({ unlockedChar, onClose }) {
         {unlockedChar ? (
           <>
             <div style={{background:"var(--gpale)", borderRadius:"50%", width:140, height:140, margin:"0 auto 16px", display:"flex", alignItems:"center", justifyContent:"center"}}>
-              <img src={unlockedChar.url} style={{width:100, height:100, objectFit:"contain", animation:"sup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)"}}/>
+              <img src={unlockedChar.url} style={{width:100, height:100, objectFit:"contain", animation:"sup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)"}} onError={(e)=>{if(e.target.src!==unlockedChar.fallback)e.target.src=unlockedChar.fallback;}}/>
             </div>
             <div style={{fontSize:18,fontWeight:800,color:"#333",marginBottom:8}}>{unlockedChar.name}</div>
             <div style={{fontSize:13,color:"var(--muted)",marginBottom:20}}>図鑑に追加されました！</div>
@@ -536,7 +537,6 @@ function LoginBonusModal({ unlockedChar, onClose }) {
     </div>
   );
 }
-
 
 function App() {
   const [loaded,        setLoaded]        = useState(false);
@@ -557,15 +557,14 @@ function App() {
   const [normalStage,   setNormalStage]   = useState(1);
   const [inputVal,      setInputVal]      = useState("");
   
-  const [showSelfCheck, setShowSelfCheck] = useState(false);
+  // ★ 音声認識用のステート
+  const [isListening,   setIsListening]   = useState(false);
+  const [transcript,    setTranscript]    = useState("");
 
   const [unlockedChars, setUnlockedChars] = useState([]);
   const [charCounts,    setCharCounts]    = useState({});
   const [loginBonusChar,setLoginBonusChar]= useState(null);
 
-  // ----------------------------------------------------
-  // ★ 事前にリストを定義しておく（重要！）
-  // ----------------------------------------------------
   const learned  = exprs.filter(e => e.status === "習得済み");
   const weakList = exprs.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7);
 
@@ -619,7 +618,7 @@ function App() {
     if (!pool.length) { setQuiz(null); return; }
     const expr = pool[Math.floor(Math.random() * pool.length)];
     setQuiz(generateQuiz(expr, list, exclude));
-    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal(""); setShowSelfCheck(false);
+    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal(""); setTranscript(""); setIsListening(false);
   }, []);
 
   function showToast(msg) {
@@ -630,55 +629,96 @@ function App() {
     setBatch([]); setTab(mode); pickQuiz(exprsRef.current, mode);
   }
 
-  function handleSelfGrade(correct) {
-    if (correct) {
-      playOkSE(); setConfetti(true); setTimeout(()=>setConfetti(false),1300);
-    } else {
-      playNgSE();
+  // ★ 音声認識（自動採点）スタート
+  function handleStartListening() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("お使いのブラウザは音声認識に対応していません。\n下のボタンからこの問題をスキップしてください。");
+      return;
     }
-    setSelected("self-graded"); setIsCorrect(correct); setShowFB(true);
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    const newExprs = exprs.map(e => {
-      if (e.id!==quiz.expression.id) return e;
-      return { ...e, attempts: e.attempts+1, correctCount: e.correctCount+(correct?1:0), status: e.status==="未学習"&&correct ? "学習中" : e.status };
+      recognition.onstart = () => { setIsListening(true); setTranscript(""); };
+      recognition.onresult = (event) => {
+        const speechResult = event.results[0][0].transcript;
+        setTranscript(speechResult);
+        
+        // 採点ロジック (例文の半分以上の単語が含まれていればOKとする)
+        const targetWords = quiz.expression.example.toLowerCase().replace(/[.,?!]/g, '').split(/\s+/);
+        const heardWords = speechResult.toLowerCase().replace(/[.,?!]/g, '').split(/\s+/);
+        let matchCount = 0;
+        targetWords.forEach(w => { if(heardWords.includes(w)) matchCount++; });
+        const isCorrect = (matchCount / targetWords.length) >= 0.5; 
+        
+        handleAnswerLogic(speechResult, isCorrect, true); // true = force grading mode
+      };
+      recognition.onerror = (event) => {
+        alert("音声認識エラー: " + event.error + "\nもう一度試すかスキップしてください。");
+        setIsListening(false);
+      };
+      recognition.onend = () => setIsListening(false);
+      recognition.start();
+    } catch(e) {
+      alert("音声認識を起動できませんでした。スキップしてください。");
+    }
+  }
+
+  // ★ 英作文（自分で作る）の自動採点提出
+  function submitOriginalWriting(e) {
+    e.preventDefault();
+    if(!inputVal.trim()) return;
+    
+    // 活用形に対応するため、フレーズの単語が「半分以上」含まれていれば正解とする
+    const words = quiz.expression.phrase.split(/\s+/);
+    let matchCount = 0;
+    const heardWords = inputVal.toLowerCase().replace(/[.,?!]/g, '');
+    words.forEach(w => {
+      if (new RegExp(getFuzzyPat(w), "i").test(heardWords)) matchCount++;
     });
-    setExprs(newExprs);
-    gasPost("updateStats", { phrase:quiz.expression.phrase, correct }).catch(()=>{});
-    setBatch([...batch, { expressionId:quiz.expression.id, correct }]);
+    const isCorrect = matchCount >= (words.length * 0.5);
+    
+    handleAnswerLogic(inputVal, isCorrect, true);
   }
 
   function handleSkipSpeaking() {
     pickQuiz(exprsRef.current, tab, ["speaking"]);
   }
 
+  // 通常の問題の回答受付
   function handleAnswer(option) {
     if (selected || !quiz) return;
-
     const isWrite = quiz.type === "writing";
     const normalize = (str) => str.replace(/[.,?!]/g, '').trim().toLowerCase();
-    
     const userAns = isWrite ? normalize(option) : option.toLowerCase();
     const rightAns = isWrite ? normalize(quiz.answer) : quiz.answer.toLowerCase();
     const correct = userAns === rightAns;
+    handleAnswerLogic(option, correct, false);
+  }
 
-    if (correct) {
+  // 採点・状態更新の共通ロジック
+  function handleAnswerLogic(userAnsString, isCorrectFlag, isAutoGradedOutput) {
+    if (isCorrectFlag) {
       playOkSE();
-      const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(option);
-      if (!isJapanese && !isWrite) setTimeout(() => speakText(option), 200);
+      const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(userAnsString);
+      if (!isJapanese && !isAutoGradedOutput && quiz.type !== "writing") setTimeout(() => speakText(userAnsString), 200);
       setConfetti(true); setTimeout(()=>setConfetti(false),1300);
     } else {
       playNgSE();
     }
 
-    setSelected(option); setIsCorrect(correct); setShowFB(true);
+    setSelected(userAnsString); setIsCorrect(isCorrectFlag); setShowFB(true);
 
     const newExprs = exprs.map(e => {
       if (e.id!==quiz.expression.id) return e;
-      return { ...e, attempts: e.attempts+1, correctCount: e.correctCount+(correct?1:0), status: e.status==="未学習"&&correct ? "学習中" : e.status };
+      return { ...e, attempts: e.attempts+1, correctCount: e.correctCount+(isCorrectFlag?1:0), status: e.status==="未学習"&&isCorrectFlag ? "学習中" : e.status };
     });
     setExprs(newExprs);
-    gasPost("updateStats", { phrase:quiz.expression.phrase, correct }).catch(()=>{});
-    setBatch([...batch, { expressionId:quiz.expression.id, correct }]);
+    gasPost("updateStats", { phrase:quiz.expression.phrase, correct:isCorrectFlag }).catch(()=>{});
+    setBatch([...batch, { expressionId:quiz.expression.id, correct:isCorrectFlag }]);
   }
 
   function handleNext() {
@@ -773,15 +813,15 @@ function App() {
       {tab === "home" && (
         <div className="map-container">
           <div style={{textAlign:"center",marginBottom:20,padding:"0 20px",zIndex:10}}>
-            <h2 style={{fontSize:22,fontWeight:900,color:"#333"}}>UNIT {Math.floor((normalStage-1)/10)+1}</h2>
+            <h2 style={{fontSize:22,fontWeight:900,color:"#333"}}>UNIT {Math.floor((normalStage-1)/5)+1}</h2>
             <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>スプレッドシートの単語をマスターしよう</p>
           </div>
           
           {unlockedChars.length > 0 && (
-             <img src={CHARACTERS.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"20%", left:"10%"}} />
+             <img src={CHARACTERS.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"20%", left:"10%"}} onError={(e)=>{if(e.target.src!==CHARACTERS.find(c=>c.id===unlockedChars[0])?.fallback)e.target.src=CHARACTERS.find(c=>c.id===unlockedChars[0])?.fallback;}} />
           )}
           {unlockedChars.length > 1 && (
-             <img src={CHARACTERS.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"50%", right:"10%", animationDelay:"1s"}} />
+             <img src={CHARACTERS.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"50%", right:"10%", animationDelay:"1s"}} onError={(e)=>{if(e.target.src!==CHARACTERS.find(c=>c.id===unlockedChars[1])?.fallback)e.target.src=CHARACTERS.find(c=>c.id===unlockedChars[1])?.fallback;}} />
           )}
 
           <div className="map-path">
@@ -869,20 +909,20 @@ function App() {
                 
                 <div className="qquestion">{quiz.question}</div>
                 
-                {/* 既存の問題タイプ */}
                 {(quiz.type==="multiple_choice"||quiz.type==="original_writing")&&<div className="qphrase">"{quiz.expression.phrase}"</div>}
                 {quiz.type==="fill_blank"&&<><div className="blank-box">{quiz.phrase}</div><div className="sub-info">{quiz.subInfo}</div></>}
                 {(quiz.type==="meaning_match"||quiz.type==="writing"||quiz.type==="original_writing")&&<div className="mhint">💬 {quiz.meaningHint}</div>}
-                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"タップして音声を再生"}</button>}
-                {quiz.type==="writing"&&<div style={{fontSize:"12px",color:"var(--muted)",marginLeft:14}}>※フレーズ全体を正しく入力してください</div>}
-                {quiz.type==="example_blank"&&<><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>}
                 
-                {/* スピーキング問題 */}
+                {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"タップして音声を再生"}</button>}
+                
+                {/* スピーキング問題用表示 */}
                 {quiz.type==="speaking"&&<>
                   <div className="ex-sentence" style={{fontSize:"18px",background:"#f0f8ff",borderColor:"#bce0fd"}}>{quiz.expression.example}</div>
                   <div className="ex-ja" style={{marginBottom:16}}>🇯🇵 {quiz.expression.exampleJa}</div>
                   <button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"お手本を聴く"}</button>
                 </>}
+                
+                {quiz.type==="example_blank"&&<><div className="ex-sentence">{quiz.exampleBlanked}</div><div className="ex-ja">🇯🇵 {quiz.exampleJa}</div></>}
               </div>
 
               {/* 回答エリア */}
@@ -892,29 +932,20 @@ function App() {
                   <button className="btn-submit-write" type="submit" disabled={selected!==null || !inputVal.trim()}>回答</button>
                 </form>
               ) : quiz.type === "original_writing" ? (
-                !showSelfCheck ? (
-                  <form className="write-form" onSubmit={e=>{ e.preventDefault(); if(inputVal.trim()) setShowSelfCheck(true); }}>
-                    <textarea className="write-input" value={inputVal} onChange={e=>setInputVal(e.target.value)} placeholder="例: I tried to learn programming, but I bit off more than I could chew." />
-                    <button className="btn-submit-write" type="submit" disabled={!inputVal.trim()}>解答例と見比べる</button>
-                  </form>
-                ) : (
-                  <div className="opts">
-                    <div style={{padding:"16px", background:"#fff5f0", borderRadius:"12px", marginBottom:"8px", fontSize:"15px", fontWeight:700}}>
-                      <div style={{fontSize:"11px",color:"#888",marginBottom:"4px"}}>あなたの解答</div>
-                      <div style={{marginBottom:"12px"}}>{inputVal}</div>
-                      <div style={{fontSize:"11px",color:"var(--bd)",marginBottom:"4px"}}>模範解答例</div>
-                      <div>{quiz.expression.example}</div>
-                      <div style={{fontSize:"12px",color:"var(--muted)",marginTop:"4px"}}>{quiz.expression.exampleJa}</div>
-                    </div>
-                    <button className="opt ok" onClick={()=>handleSelfGrade(true)} disabled={!!selected} style={{textAlign:"center",background:"var(--blue)!important",color:"#fff!important",borderColor:"var(--bd)!important"}}><Icons.Check/> 正しく書けた（意味が通る）</button>
-                    <button className="opt ng" onClick={()=>handleSelfGrade(false)} disabled={!!selected} style={{textAlign:"center"}}><Icons.Cross/> 全然書けなかった</button>
-                  </div>
-                )
+                <form className="write-form" onSubmit={submitOriginalWriting}>
+                  <textarea className="write-input" value={inputVal} onChange={e=>setInputVal(e.target.value)} disabled={selected!==null} placeholder="ここに英文を入力してください..." />
+                  {!selected && <button className="btn-submit-write" type="submit" disabled={!inputVal.trim()}>自動判定する</button>}
+                </form>
               ) : quiz.type === "speaking" ? (
                 <div className="opts" style={{gap:"12px"}}>
-                  <button className="opt ok" onClick={()=>handleSelfGrade(true)} disabled={!!selected} style={{textAlign:"center",background:"var(--green)!important",color:"#fff!important",borderColor:"var(--gd)!important"}}><Icons.Mic/> スムーズに言えた！</button>
-                  <button className="opt ng" onClick={()=>handleSelfGrade(false)} disabled={!!selected} style={{textAlign:"center"}}><Icons.Cross/> つっかえてしまった</button>
-                  {!selected && <button className="skip-btn" onClick={handleSkipSpeaking}>この問題をスキップ（別問題へ）</button>}
+                  {!selected ? (
+                    <>
+                      <button className={`btn-submit-write ${isListening ? "playing" : ""}`} onClick={handleStartListening} disabled={isListening}>
+                        {isListening ? <><Icons.Mic/> 聞き取り中...</> : <><Icons.Mic/> マイクを押して発音する</>}
+                      </button>
+                      <button className="skip-btn" onClick={handleSkipSpeaking}>この問題をスキップ（別問題へ）</button>
+                    </>
+                  ) : null}
                 </div>
               ) : (
                 <div className="opts">
@@ -927,10 +958,21 @@ function App() {
               )}
 
               {/* フィードバック */}
-              {showFB && quiz.type !== "original_writing" && quiz.type !== "speaking" && (
+              {showFB && (
                 <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
                   <div className="fdbk-ttl">{isCorrect?<><Icons.Check/> 正解！</>:<><Icons.Cross/> 不正解…</>}</div>
                   <div className="fdbk-body">
+                    {/* ★ 自分で作る・スピーキング固有のフィードバック */}
+                    {quiz.type==="original_writing" && !isCorrect && (
+                      <span style={{color:"var(--rd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>⚠️ お題のフレーズ（またはその活用形）が正しく含まれていないようです。<br/><br/>あなたの入力:<br/>{selected}</span>
+                    )}
+                    {quiz.type==="speaking" && !isCorrect && (
+                      <span style={{color:"var(--rd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>⚠️ 例文の単語があまり聞き取れませんでした。<br/><br/>認識された音声:<br/>{selected}</span>
+                    )}
+                    {quiz.type==="speaking" && isCorrect && (
+                      <span style={{color:"var(--gd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>🎤 認識された音声:<br/>{selected}</span>
+                    )}
+                    
                     {quiz.type==="writing" && !isCorrect ? <><span style={{color:"var(--rd)",textDecoration:"line-through"}}>入力: {selected}</span><br/><span style={{color:"var(--gd)",fontSize:"15px"}}>正解: <strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span></> : <span><strong>{quiz.expression.phrase}</strong> <MiniSpeaker text={quiz.expression.phrase}/></span>}
                     <br/>{quiz.expression.meaning}
                   </div>
@@ -1004,7 +1046,7 @@ function App() {
               const count = charCounts[char.id] || 0;
               return (
                 <div key={char.id} className="col-item">
-                  <img src={char.url} className={`col-img ${!isUnlocked ? 'locked' : ''}`} alt={char.name} onError={(e)=>e.target.style.display='none'}/>
+                  <img src={char.url} className={`col-img ${!isUnlocked ? 'locked' : ''}`} alt={char.name} onError={(e)=>{if(e.target.src!==char.fallback)e.target.src=char.fallback;}}/>
                   <div className="col-name">{isUnlocked ? char.name : "???"}</div>
                   <div className="col-count">{isUnlocked ? `登場回数: ${count}回` : "未獲得"}</div>
                 </div>
@@ -1051,7 +1093,7 @@ function App() {
               <Icons.Alert/>
               {weakList.length > 0 && <span style={{position:"absolute",top:-8,right:-12}} className="badge-red">{weakList.length}</span>}
             </div>
-            苦手克服
+            苦手
           </button>
           <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}>
             <Icons.Star/> 習得
