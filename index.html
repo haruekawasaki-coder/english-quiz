@@ -45,6 +45,7 @@
     .map-node.locked{background:#e5e5e5;color:#bbb;}
     .map-node.cleared{background:var(--green);color:#fff;box-shadow:0 6px 0 var(--gd);}
     .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
+    .map-node.weak{background:var(--red);color:#fff;box-shadow:0 6px 0 var(--rd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-start-btn{position:absolute;top:-50px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
     .map-start-btn::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
     .floating-char{position:absolute;width:60px;height:60px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:1;opacity:0.9;}
@@ -60,6 +61,12 @@
     .bdot.cur{background:var(--blue);transform:scale(1.3);}
     .qcard{margin:10px 16px 10px;background:var(--card);border-radius:var(--r);border:2px solid var(--border);box-shadow:0 5px 0 var(--border);padding:20px 18px 16px;}
     .qbadge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:99px;padding:3px 12px;margin-bottom:10px;}
+    .qbadge.mc{background:#d7f5b1;color:#3a9100;}
+    .qbadge.fb{background:#ddeeff;color:var(--bd);}
+    .qbadge.mm{background:#f0e0ff;color:#9340c8;}
+    .qbadge.ls{background:#fff3cd;color:#8a6200;}
+    .qbadge.ex{background:#ffe4e4;color:#c73434;}
+    .qbadge.wr{background:#e0f7fa;color:#006064;}
     .qquestion{font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.5;}
     .qphrase{font-size:23px;font-weight:900;margin:4px 0 6px;line-height:1.25;}
     .blank-box{font-size:18px;font-weight:800;background:#f0f0f0;border-radius:10px;padding:10px 14px;margin:4px 0 6px;line-height:1.5;}
@@ -169,7 +176,6 @@ const DUMMY = [
   { id:3, phrase:"bite off more than you can chew", meaning:"手に負えないほど多くのことを引き受ける", example:"He bit off more than he could chew.", exampleJa:"彼は手に負えなくなった。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
-// ★ 指定されたLINEスタンプのキャラクター群（URLは各公式ストアの代表的な画像パスをシミュレート）
 const CHARACTERS = [
   { id: "y1", name: "しばこっぺ", url: "https://stickershop.line-scdn.net/stickershop/v1/product/1883488/LINEStorePC/main.png", series: "いーすとけん" },
   { id: "y2", name: "サモメロン", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/19089851/android/sticker.png", series: "いーすとけん" },
@@ -258,7 +264,7 @@ function playOkSE() {
 }
 function playNextSE() {
   if (navigator.vibrate) navigator.vibrate([30]);
-  createSlideTone(400, 800, 'sine', 0, 0.1, 0.35, 0.001); // 音量大
+  createSlideTone(400, 800, 'sine', 0, 0.1, 0.35, 0.001); 
 }
 
 function speakText(text, onEnd) {
@@ -387,7 +393,6 @@ function extractDynamicPhrase(phrase, sentence) {
   return phrase;
 }
 
-// ★ スピーキング・オリジナル英作文を追加
 function generateQuiz(expression, all, excludeTypes=[]) {
   const others = all.filter(e => e.id !== expression.id);
   const acc = expression.attempts > 0 ? (expression.correctCount / expression.attempts) * 100 : 0;
@@ -444,12 +449,10 @@ function BatchModal({ batch, expressions, onContinue, unlockedChars }) {
   const [yeastken, setYeastken] = useState(null);
 
   useEffect(() => {
-    // 獲得済みのイラストの中からランダムに表示
     const available = CHARACTERS.filter(c => unlockedChars.includes(c.id));
     if (available.length > 0) {
       const chosen = available[Math.floor(Math.random() * available.length)];
       setYeastken(chosen);
-      // カウントアップ
       const counts = lsGet(LS_COUNTS) || {};
       counts[chosen.id] = (counts[chosen.id] || 0) + 1;
       lsSet(LS_COUNTS, counts);
@@ -505,7 +508,6 @@ function BatchModal({ batch, expressions, onContinue, unlockedChars }) {
   );
 }
 
-// ★ ログインボーナスモーダル
 function LoginBonusModal({ unlockedChar, onClose }) {
   return (
     <div className="modal-overlay">
@@ -553,10 +555,8 @@ function App() {
   const [normalStage,   setNormalStage]   = useState(1);
   const [inputVal,      setInputVal]      = useState("");
   
-  // アウトプット自己評価用の状態
   const [showSelfCheck, setShowSelfCheck] = useState(false);
 
-  // キャラクター＆ログイン管理
   const [unlockedChars, setUnlockedChars] = useState([]);
   const [charCounts,    setCharCounts]    = useState({});
   const [loginBonusChar,setLoginBonusChar]= useState(null);
@@ -574,7 +574,6 @@ function App() {
     setUnlockedChars(savedChars);
     setCharCounts(lsGet(LS_COUNTS, {}));
 
-    // ログインボーナス判定
     const today = new Date().toDateString();
     const lastLogin = lsGet(LS_LOGIN, null);
     if (today !== lastLogin) {
@@ -587,7 +586,6 @@ function App() {
         setUnlockedChars(newUnlocked);
         lsSet(LS_CHARS, newUnlocked);
       } else {
-        // コンプ済みは100ptプレゼント
         setLoginBonusChar(null);
         setPoints(p => { const np = p+100; lsSet(LS_POINTS, np); return np; });
       }
@@ -624,7 +622,6 @@ function App() {
     setBatch([]); setTab(mode); pickQuiz(exprsRef.current, mode);
   }
 
-  // ★自己評価（スピーキング・オリジナル英作文）の処理
   function handleSelfGrade(correct) {
     if (correct) {
       playOkSE(); setConfetti(true); setTimeout(()=>setConfetti(false),1300);
@@ -642,7 +639,6 @@ function App() {
     setBatch([...batch, { expressionId:quiz.expression.id, correct }]);
   }
 
-  // ★スピーキングスキップ（別問題補充）
   function handleSkipSpeaking() {
     pickQuiz(exprsRef.current, tab, ["speaking"]);
   }
@@ -683,7 +679,6 @@ function App() {
     else pickQuiz(exprsRef.current, tab);
   }
 
-  // 中断確認
   function handleQuitQuiz() {
     if (window.confirm("本当に中断して戻りますか？\n（このセットの途中の進捗はリセットされます）")) {
       setBatch([]);
@@ -734,6 +729,9 @@ function App() {
       showToast(`🎁 購入しました！ 残り ${np}pt`);
     }
   };
+
+  const learned  = exprs.filter(e=>e.status==="習得済み");
+  const weakList = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7);
 
   if (!loaded) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:16}}>
