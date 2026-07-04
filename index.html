@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (スピーキング＆図鑑フル搭載版)</title>
+  <title>English Quiz (完全修正版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -47,6 +47,7 @@
     .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-node.weak{background:var(--red);color:#fff;box-shadow:0 6px 0 var(--rd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-start-btn{position:absolute;top:-50px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
+    .map-start-btn.weak{color:var(--red);}
     .map-start-btn::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
     .floating-char{position:absolute;width:60px;height:60px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:1;opacity:0.9;}
     @keyframes floatChar{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-15px) rotate(5deg)}}
@@ -191,11 +192,10 @@ const CHARACTERS = [
   { id: "dh2", name: "やさしい恐竜", url: "https://stickershop.line-scdn.net/stickershop/v1/sticker/293847592/android/sticker.png", series: "恐竜はじめました" }
 ];
 
-let audioCtx = null;
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
+  if (!window.quizAudioCtx) window.quizAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (window.quizAudioCtx.state === 'suspended') window.quizAudioCtx.resume();
+  return window.quizAudioCtx;
 }
 function unlockAudio() {
   try {
@@ -561,6 +561,12 @@ function App() {
   const [charCounts,    setCharCounts]    = useState({});
   const [loginBonusChar,setLoginBonusChar]= useState(null);
 
+  // ----------------------------------------------------
+  // ★ ここで必要な変数を全て導出し、確実に定義します
+  // ----------------------------------------------------
+  const learned  = exprs.filter(e => e.status === "習得済み");
+  const weakList = exprs.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7);
+
   const exprsRef = useRef(exprs);
   exprsRef.current = exprs;
 
@@ -730,9 +736,6 @@ function App() {
     }
   };
 
-  const learned  = exprs.filter(e=>e.status==="習得済み");
-  const weakList = exprs.filter(e=>e.status!=="習得済み" && e.attempts>0 && (e.correctCount/e.attempts)<0.7);
-
   if (!loaded) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:16}}>
       <div style={{width:40,height:40,border:"4px solid #E5E5E5",borderTopColor:"#58CC02",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
@@ -764,7 +767,7 @@ function App() {
 
       {gasError&&<div className="banner err">❌ GAS接続エラー — キャッシュで動作中</div>}
 
-      {/* ═══ HOME (通常マップ：5階層ごとの物理タワー) ════════════ */}
+      {/* ═══ HOME (通常マップ) ════════════ */}
       {tab === "home" && (
         <div className="map-container">
           <div style={{textAlign:"center",marginBottom:20,padding:"0 20px",zIndex:10}}>
@@ -808,17 +811,17 @@ function App() {
         <div className="map-container" style={{background:"#fff5f5"}}>
           <div style={{textAlign:"center",marginBottom:20,padding:"0 20px"}}>
             <h2 style={{fontSize:22,fontWeight:900,color:"var(--red)"}}>苦手克服タワー</h2>
-            <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>残りの苦手な表現：<strong>{exprs.filter(e=>e.status!=="習得済み"&&e.attempts>0&&(e.correctCount/e.attempts)<0.7).length}個</strong></p>
+            <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>残りの苦手な表現：<strong>{weakList.length}個</strong></p>
           </div>
           
-          {exprs.filter(e=>e.status!=="習得済み"&&e.attempts>0&&(e.correctCount/e.attempts)<0.7).length === 0 ? (
+          {weakList.length === 0 ? (
             <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",textAlign:"center",gap:14}}>
               <div style={{fontSize:56}}>✨</div><div style={{fontSize:20,fontWeight:900}}>タワー崩壊！</div><div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>素晴らしい定着率です！</div>
             </div>
           ) : (
             <div className="map-path">
               <div className="map-line" style={{background:"#ffcccc"}}><div className="map-line-fill" style={{background:"var(--red)", height:"0%"}}/></div>
-              {[...Array(Math.max(1, Math.ceil(exprs.filter(e=>e.status!=="習得済み"&&e.attempts>0&&(e.correctCount/e.attempts)<0.7).length / BATCH_SIZE)))].map((_, i, arr) => {
+              {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i, arr) => {
                 const nodeStage = arr.length - i; const isCurrent = nodeStage === 1; const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
                 return (
                   <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shift})`}}>
@@ -1021,7 +1024,11 @@ function App() {
                 return (
                   <div key={expr.id} className="ll-item">
                     <div className="ll-icon"><Icons.Star/></div>
-                    <div className="ll-body"><div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div><div className="ll-meaning">{expr.meaning.split("。")[0]}</div><div className="ll-ex">{expr.example}</div></div>
+                    <div className="ll-body">
+                      <div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
+                      <div className="ll-meaning">{expr.meaning.split("。")[0]}</div>
+                      <div className="ll-ex">{expr.example}</div>
+                    </div>
                     <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><Icons.Refresh/> 戻す</button>
                   </div>
                 );
@@ -1034,13 +1041,25 @@ function App() {
       {/* Bottom Nav */}
       {(tab === "home" || tab === "weak_home" || tab === "shop" || tab === "collection" || tab === "learned") && (
         <nav className="nav">
-          <button className={`ntab${tab==="home"?" on":""}`} onClick={()=>setTab("home")}><Icons.Map/> ステージ</button>
-          <button className={`ntab${tab==="weak_home"?" on":""}`} onClick={()=>setTab("weak_home")}>
-            <div style={{position:"relative"}}><Icons.Alert/>{weakList.length > 0 && <span style={{position:"absolute",top:-8,right:-12}} className="badge-red">{weakList.length}</span>}</div>苦手
+          <button className={`ntab${tab==="home"?" on":""}`} onClick={()=>setTab("home")}>
+            <Icons.Map/> ステージ
           </button>
-          <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}><Icons.Star/> 習得</button>
-          <button className={`ntab${tab==="shop"?" on":""}`} onClick={()=>setTab("shop")}><Icons.Shop/> ショップ</button>
-          <button className={`ntab${tab==="collection"?" on":""}`} onClick={()=>setTab("collection")}><Icons.Book/> 図鑑</button>
+          <button className={`ntab${tab==="weak_home"?" on":""}`} onClick={()=>setTab("weak_home")}>
+            <div style={{position:"relative"}}>
+              <Icons.Alert/>
+              {weakList.length > 0 && <span style={{position:"absolute",top:-8,right:-12}} className="badge-red">{weakList.length}</span>}
+            </div>
+            苦手克服
+          </button>
+          <button className={`ntab${tab==="learned"?" on":""}`} onClick={()=>setTab("learned")}>
+            <Icons.Star/> 習得
+          </button>
+          <button className={`ntab${tab==="shop"?" on":""}`} onClick={()=>setTab("shop")}>
+            <Icons.Shop/> ショップ
+          </button>
+          <button className={`ntab${tab==="collection"?" on":""}`} onClick={()=>setTab("collection")}>
+            <Icons.Book/> 図鑑
+          </button>
         </nav>
       )}
     </div>
