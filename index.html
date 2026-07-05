@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (音声認識ストレス軽減版)</title>
+  <title>English Quiz (全自動スタンプ抽出＆自動採点版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -25,14 +25,17 @@
     #root{height:100%;}
     .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;}
     
+    /* Header */
     .top-header{background:var(--card);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;flex-shrink:0;}
     .pts-badge{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:900;color:var(--yellow);}
     
+    /* Nav */
     .nav{background:var(--card);border-top:2px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100;flex-shrink:0;}
     .ntab{flex:1;padding:12px 2px 10px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:10px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;border-top:3px solid transparent;transition:all .2s;-webkit-tap-highlight-color:transparent;}
     .ntab.on{color:var(--blue);border-top-color:var(--blue);}
     .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:9px;font-weight:900;}
 
+    /* Map UI */
     .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:40px 0 80px;background:#f0f5f0;position:relative;}
     .map-path{display:flex;flex-direction:column-reverse;align-items:center;gap:40px;position:relative;width:100%;margin-top:20px;}
     .map-line{position:absolute;top:30px;bottom:30px;width:12px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
@@ -51,6 +54,7 @@
     @keyframes float{0%,100%{transform:scale(1.15) translateY(0)}50%{transform:scale(1.15) translateY(-6px)}}
     @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
 
+    /* Quiz Area */
     .bdots{display:flex;gap:6px;justify-content:center;padding:10px 16px 4px;}
     .bdot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .25s,transform .25s;}
     .bdot.ok{background:var(--green);}
@@ -91,7 +95,7 @@
     @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
     
     .write-form{display:flex;flex-direction:column;gap:10px;margin:8px 16px 0;}
-    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;resize:vertical;min-height:70px;}
+    .write-input{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;font-family:inherit;color:var(--text);outline:none;box-shadow:0 3px 0 var(--border);transition:border-color .15s;resize:vertical;min-height:80px;}
     .write-input:focus{border-color:var(--blue);}
     .write-input:disabled{background:#eef1f5;color:var(--muted);border-color:#d5d9e0;box-shadow:none;}
     .btn-submit-write{border:none;border-radius:12px;padding:14px 24px;font-family:inherit;font-size:15px;font-weight:800;background:var(--blue);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--bd);transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;}
@@ -100,6 +104,7 @@
     .btn-submit-write.playing{background:var(--yellow);color:#5a3f00;box-shadow:0 4px 0 var(--yd);animation:spulse 1s infinite;}
 
     .skip-btn{background:none;border:2px solid var(--border);border-radius:12px;padding:10px;font-family:inherit;font-size:14px;font-weight:800;color:var(--muted);cursor:pointer;margin:0 16px;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .fdbk-warning{background:#fff3cd; border:2px solid #ffeeba; color:#856404; padding:12px; border-radius:12px; font-size:13px; font-weight:700; line-height:1.5; margin-bottom:12px;}
 
     .fdbk{margin:10px 16px 0;border-radius:var(--r);padding:13px 16px;border:2px solid;animation:sup .28s cubic-bezier(.34,1.56,.64,1);}
     .fdbk.ok{background:var(--gpale);border-color:var(--green);}
@@ -123,7 +128,7 @@
     .btn-link-wrap{display:flex;gap:8px;}
     .btn-src{flex:1;background:none;border:2px solid var(--border);border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;}
     
-    /* Shop & Collection */
+    /* Shop & Collection & Modal */
     .shop-item{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:16px;margin-bottom:12px;box-shadow:0 4px 0 var(--border);}
     .shop-icon{font-size:32px;background:#f0f5f0;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
     .shop-info{flex:1;}
@@ -140,7 +145,6 @@
     .col-name{font-size:11px;font-weight:800;color:#333;margin-bottom:4px;height:28px;display:flex;align-items:center;justify-content:center;line-height:1.2;}
     .col-count{font-size:10px;color:var(--muted);font-weight:700;}
 
-    /* Modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
     .modal-content{background:#fff;border-radius:24px;padding:30px 24px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:sup .3s cubic-bezier(.34,1.56,.64,1);}
     
@@ -148,7 +152,14 @@
     .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
     .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
     .yeastken-img{width:140px;height:140px;object-fit:contain;margin:10px 0;animation:floatChar 2s infinite ease-in-out alternate;}
+
+    /* Loading Screen */
+    .loader-wrap{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+    .loader-spinner{width:50px;height:50px;border:5px solid #E5E5E5;border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px;}
+    .loader-text{font-weight:800;color:#333;font-size:18px;margin-bottom:8px;}
+    .loader-sub{font-weight:700;color:var(--muted);font-size:13px;line-height:1.6;}
   </style>
 </head>
 <body>
@@ -163,12 +174,13 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwu8KtiWduIE_Bp9OSYP0Do
 async function gasGet(params) { const url = GAS_URL + "?" + new URLSearchParams(params); const res = await fetch(url); return res.json(); }
 async function gasPost(action, data) { const body = new URLSearchParams({ action, data: JSON.stringify(data) }); const res = await fetch(GAS_URL, { method:"POST", body }); return res.json(); }
 
-const LS_EXPRS  = "quiz-exprs-v17";
-const LS_STAGE  = "quiz-stage-v17";
-const LS_POINTS = "quiz-points-v17";
-const LS_CHARS  = "quiz-chars-v17";
-const LS_COUNTS = "quiz-counts-v17";
-const LS_LOGIN  = "quiz-login-v17";
+const LS_EXPRS  = "quiz-exprs-v18";
+const LS_STAGE  = "quiz-stage-v18";
+const LS_POINTS = "quiz-points-v18";
+const LS_CHARS  = "quiz-chars-v18";
+const LS_COUNTS = "quiz-counts-v18";
+const LS_LOGIN  = "quiz-login-v18";
+const LS_STAMP_DB = "quiz-stamp-db-v1"; // 全スタンプ保存用
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -179,17 +191,27 @@ const DUMMY = [
   { id:3, phrase:"bite off more than you can chew", meaning:"手に負えないほど多くのことを引き受ける", example:"He bit off more than he could chew.", exampleJa:"彼は手に負えなくなった。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
-const CHARACTERS = [
-  { id: "c1", name: "buddle puppy", url: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/LINEStorePC/main.png" },
-  { id: "c2", name: "いーすとけん 絵文字", url: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png", fallback: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png" },
-  { id: "c3", name: "buddle puppy 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/30902982/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/30902982/LINEStorePC/main.png" },
-  { id: "c4", name: "あんまりつよくない", url: "https://stickershop.line-scdn.net/stickershop/v1/product/34430061/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/34430061/LINEStorePC/main.png" },
-  { id: "c5", name: "恐竜はじめました", url: "https://stickershop.line-scdn.net/stickershop/v1/product/34162445/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/34162445/LINEStorePC/main.png" },
-  { id: "c6", name: "ningen_life 1", url: "https://stickershop.line-scdn.net/stickershop/v1/product/30285812/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/30285812/LINEStorePC/main.png" },
-  { id: "c7", name: "ningen_life 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/33942780/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/33942780/LINEStorePC/main.png" },
-  { id: "c8", name: "いーすとけん", url: "https://stickershop.line-scdn.net/stickershop/v1/product/33696321/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/33696321/LINEStorePC/main.png" },
-  { id: "c9", name: "buddle puppy 3", url: "https://stickershop.line-scdn.net/stickershop/v1/product/32230896/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/32230896/LINEStorePC/main.png" },
-  { id: "c10", name: "あんまりつよくない 2", url: "https://stickershop.line-scdn.net/stickershop/v1/product/31852012/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/31852012/LINEStorePC/main.png" }
+// =========================================================================
+// ★ ここにLINEスタンプのURLを足すだけで、全イラストを自動抽出します！ ★
+// =========================================================================
+const STAMP_URLS = [
+  { name: "buddle puppy", url: "https://store.line.me/stickershop/product/27427946/ja" },
+  { name: "いーすとけん 絵文字", url: "https://store.line.me/emojishop/product/6a2bb148ecd6623f20a8f97d/ja" },
+  { name: "buddle puppy", url: "https://store.line.me/stickershop/product/30902982/ja" },
+  { name: "あんまりつよくない", url: "https://store.line.me/stickershop/product/34430061/ja" },
+  { name: "恐竜はじめました", url: "https://store.line.me/stickershop/product/34162445/ja" },
+  { name: "ningen_life", url: "https://store.line.me/stickershop/product/30285812/ja" },
+  { name: "ningen_life", url: "https://store.line.me/stickershop/product/33942780/ja" },
+  { name: "いーすとけん", url: "https://store.line.me/stickershop/product/33696321/ja" },
+  { name: "buddle puppy", url: "https://store.line.me/stickershop/product/32230896/ja" },
+  { name: "あんまりつよくない", url: "https://store.line.me/stickershop/product/31852012/ja" }
+];
+
+// 万が一抽出に失敗した時のための初期キャラ
+const FALLBACK_CHARACTERS = [
+  { id: "fallback_1", name: "buddle puppy", url: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/IOS/main_animation@2x.png" },
+  { id: "fallback_2", name: "いーすとけん", url: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png" },
+  { id: "fallback_3", name: "恐竜はじめました", url: "https://stickershop.line-scdn.net/stickershop/v1/product/34162445/IOS/main_animation@2x.png" }
 ];
 
 let audioCtx = null;
@@ -441,16 +463,17 @@ function generateQuiz(expression, all, excludeTypes=[]) {
   };
 }
 
-function BatchModal({ batch, expressions, onContinue, unlockedChars }) {
+function BatchModal({ batch, expressions, onContinue, unlockedChars, allCharacters }) {
   const correctN = batch.filter(b=>b.correct).length;
   const pointsEarned = 20 + (correctN * 2);
-  const [yeastken, setYeastken] = useState(null);
+  const [luckyChar, setLuckyChar] = useState(null);
 
   useEffect(() => {
-    const available = CHARACTERS.filter(c => unlockedChars.includes(c.id));
+    // 解放済みの全キャラクター（スタンプ）の中からランダムに1つ選ぶ
+    const available = allCharacters.filter(c => unlockedChars.includes(c.id));
     if (available.length > 0) {
       const chosen = available[Math.floor(Math.random() * available.length)];
-      setYeastken(chosen);
+      setLuckyChar(chosen);
       const counts = lsGet(LS_COUNTS) || {};
       counts[chosen.id] = (counts[chosen.id] || 0) + 1;
       lsSet(LS_COUNTS, counts);
@@ -462,10 +485,10 @@ function BatchModal({ batch, expressions, onContinue, unlockedChars }) {
       <div className="modal-content" style={{maxWidth:430, padding:"20px 20px 30px", maxHeight:"90vh", overflowY:"auto"}}>
         <div style={{fontSize:22,fontWeight:900,color:"var(--yellow)",letterSpacing:".1em"}}>STAGE CLEAR!</div>
         
-        {yeastken && (
+        {luckyChar && (
           <div style={{margin:"10px 0"}}>
-            <img src={yeastken.url} className="yeastken-img" alt={yeastken.name} onError={(e)=>{if(e.target.src!==yeastken.fallback)e.target.src=yeastken.fallback;}}/>
-            <div style={{fontSize:16,fontWeight:800,color:"#333"}}>{yeastken.name}</div>
+            <img src={luckyChar.url} className="yeastken-img" alt={luckyChar.name} onError={(e)=>{if(e.target.src!==luckyChar.fallback)e.target.src=luckyChar.fallback;}}/>
+            <div style={{fontSize:16,fontWeight:800,color:"#333"}}>{luckyChar.name}</div>
           </div>
         )}
         
@@ -535,6 +558,7 @@ function LoginBonusModal({ unlockedChar, onClose }) {
 
 function App() {
   const [loaded,        setLoaded]        = useState(false);
+  const [isFetchingStamps, setIsFetchingStamps] = useState(false); // スタンプ抽出中フラグ
   const [gasError,      setGasError]      = useState(false);
   const [tab,           setTab]           = useState("home"); 
   const [exprs,         setExprs]         = useState([]);
@@ -553,54 +577,103 @@ function App() {
   const [inputVal,      setInputVal]      = useState("");
   
   const [isListening,   setIsListening]   = useState(false);
-  // ★ 音声認識エラー時に、UIを自動採点から手動の自己評価に切り替えるステート
   const [speechFallback,setSpeechFallback]= useState(false); 
 
+  // ★ 全キャラクターマスタDB
+  const [allCharacters, setAllCharacters] = useState([]);
   const [unlockedChars, setUnlockedChars] = useState([]);
   const [charCounts,    setCharCounts]    = useState({});
   const [loginBonusChar,setLoginBonusChar]= useState(null);
 
-  const learned  = exprs.filter(e => e.status === "習得済み");
-  const weakList = exprs.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7);
-
   const exprsRef = useRef(exprs);
   exprsRef.current = exprs;
 
+  // 初期化：スタンプの自動抽出＆スプレッドシートデータ取得
   useEffect(() => {
     document.addEventListener('pointerdown', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
 
     setPoints(lsGet(LS_POINTS, 0));
     setNormalStage(lsGet(LS_STAGE, 1));
-    const savedChars = lsGet(LS_CHARS, []);
-    setUnlockedChars(savedChars);
     setCharCounts(lsGet(LS_COUNTS, {}));
 
-    const today = new Date().toDateString();
-    const lastLogin = lsGet(LS_LOGIN, null);
-    if (today !== lastLogin) {
-      lsSet(LS_LOGIN, today);
-      const locked = CHARACTERS.filter(c => !savedChars.includes(c.id));
-      if (locked.length > 0) {
-        const lucky = locked[Math.floor(Math.random() * locked.length)];
-        setLoginBonusChar(lucky);
-        const newUnlocked = [...savedChars, lucky.id];
-        setUnlockedChars(newUnlocked);
-        lsSet(LS_CHARS, newUnlocked);
-      } else {
-        setLoginBonusChar(null);
-        setPoints(p => { const np = p+100; lsSet(LS_POINTS, np); return np; });
+    const initData = async () => {
+      // 1. スタンプの自動抽出処理
+      let db = lsGet(LS_STAMP_DB);
+      if (!db || db.length < 50) { // キャッシュがないか少なすぎる場合はスクレイピング
+        setIsFetchingStamps(true);
+        db = [];
+        let sId = 1;
+        try {
+          const reqs = STAMP_URLS.map(item => 
+            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(item.url)}`)
+              .then(r => r.json())
+              .then(data => {
+                const html = data.contents;
+                let matches = [];
+                if (item.url.includes('emojishop')) {
+                  const regex = /https:\/\/stickershop\.line-scdn\.net\/sticonshop\/v1\/sticon\/[a-z0-9]+\/iPhone\/\d+\.png/g;
+                  matches = html.match(regex) || [];
+                } else {
+                  const animRegex = /https:\/\/stickershop\.line-scdn\.net\/stickershop\/v1\/sticker\/\d+\/IOS\/sticker_animation@2x\.png/g;
+                  let animMatches = html.match(animRegex) || [];
+                  if (animMatches.length > 0) matches = animMatches;
+                  else {
+                    const staticRegex = /https:\/\/stickershop\.line-scdn\.net\/stickershop\/v1\/sticker\/\d+\/android\/sticker\.png/g;
+                    matches = html.match(staticRegex) || [];
+                  }
+                }
+                matches = [...new Set(matches)]; // 重複削除
+                return matches.map(imgUrl => ({
+                  id: "st_" + sId++,
+                  name: item.name,
+                  url: imgUrl,
+                  fallback: imgUrl
+                }));
+              })
+              .catch(e => { console.error("Fetch failed", item.url); return []; })
+          );
+          const results = await Promise.all(reqs);
+          db = results.flat();
+          if(db.length > 0) lsSet(LS_STAMP_DB, db);
+          else db = FALLBACK_CHARACTERS; // 万が一APIが落ちていたらフォールバック
+        } catch(e) { db = FALLBACK_CHARACTERS; }
+        setIsFetchingStamps(false);
       }
-    }
+      setAllCharacters(db);
 
-    gasGet({ action:"getExpressions" })
-      .then(({ expressions }) => {
-        const data = (expressions && expressions.length) ? expressions : (lsGet(LS_EXPRS) || DUMMY);
-        setExprs(data); lsSet(LS_EXPRS, data); setLoaded(true);
-      })
-      .catch(() => {
-        setGasError(true); setExprs(lsGet(LS_EXPRS) || DUMMY); setLoaded(true);
-      });
+      // 2. ログインボーナス処理
+      const savedChars = lsGet(LS_CHARS, []);
+      setUnlockedChars(savedChars);
+      const today = new Date().toDateString();
+      const lastLogin = lsGet(LS_LOGIN, null);
+      if (today !== lastLogin) {
+        lsSet(LS_LOGIN, today);
+        const locked = db.filter(c => !savedChars.includes(c.id));
+        if (locked.length > 0) {
+          const lucky = locked[Math.floor(Math.random() * locked.length)];
+          setLoginBonusChar(lucky);
+          const newUnlocked = [...savedChars, lucky.id];
+          setUnlockedChars(newUnlocked);
+          lsSet(LS_CHARS, newUnlocked);
+        } else {
+          setLoginBonusChar(null);
+          setPoints(p => { const np = p+100; lsSet(LS_POINTS, np); return np; });
+        }
+      }
+
+      // 3. GASから英単語データ取得
+      gasGet({ action:"getExpressions" })
+        .then(({ expressions }) => {
+          const data = (expressions && expressions.length) ? expressions : (lsGet(LS_EXPRS) || DUMMY);
+          setExprs(data); lsSet(LS_EXPRS, data); setLoaded(true);
+        })
+        .catch(() => {
+          setGasError(true); setExprs(lsGet(LS_EXPRS) || DUMMY); setLoaded(true);
+        });
+    };
+
+    initData();
 
     return () => { document.removeEventListener('pointerdown', unlockAudio); document.removeEventListener('touchstart', unlockAudio); }
   }, []);
@@ -624,7 +697,7 @@ function App() {
     setBatch([]); setTab(mode); pickQuiz(exprsRef.current, mode);
   }
 
-  // ★ 音声認識スタート（エラー時はアラートを出さずにフォールバックへ）
+  // ★ 音声認識スタート（自動採点）
   function handleStartListening() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -648,9 +721,8 @@ function App() {
         handleAnswerLogic(speechResult, isCorrect, true); 
       };
       recognition.onerror = (event) => {
-        // iOSでよくあるaborted等が出た場合は、ウザいアラートを出さずに手動採点UIに切り替える
         setIsListening(false);
-        setSpeechFallback(true); 
+        setSpeechFallback(true); // エラー時はアラートを出さずに手動評価へ
       };
       recognition.onend = () => setIsListening(false);
       recognition.start();
@@ -660,6 +732,7 @@ function App() {
     }
   }
 
+  // ★ 英作文の自動採点
   function submitOriginalWriting(e) {
     e.preventDefault();
     if(!inputVal.trim()) return;
@@ -769,10 +842,15 @@ function App() {
     }
   };
 
-  if (!loaded) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",gap:16}}>
-      <div style={{width:40,height:40,border:"4px solid #E5E5E5",borderTopColor:"#58CC02",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
-      <div style={{fontWeight:700,color:"#aaa",fontSize:15}}>データを読み込み中…</div>
+  const learned  = exprs.filter(e => e.status === "習得済み");
+  const weakList = exprs.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7);
+
+  // ★ ローディング画面
+  if (!loaded || isFetchingStamps) return (
+    <div className="loader-wrap">
+      <div className="loader-spinner"/>
+      <div className="loader-text">データを読み込み中…</div>
+      {isFetchingStamps && <div className="loader-sub">最新のスタンプ画像（全350種以上）を<br/>自動抽出しています。初回のみ数秒かかります！</div>}
     </div>
   );
 
@@ -785,7 +863,7 @@ function App() {
         <LoginBonusModal unlockedChar={loginBonusChar} onClose={() => setLoginBonusChar(null)} />
       )}
 
-      {showBatch && <BatchModal batch={batch} expressions={exprs} onContinue={handleBatchContinue} unlockedChars={unlockedChars}/>}
+      {showBatch && <BatchModal batch={batch} expressions={exprs} onContinue={handleBatchContinue} unlockedChars={unlockedChars} allCharacters={allCharacters}/>}
 
       {/* Header */}
       {tab !== "quiz" && tab !== "weak_quiz" && (
@@ -809,10 +887,10 @@ function App() {
           </div>
           
           {unlockedChars.length > 0 && (
-             <img src={CHARACTERS.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"20%", left:"10%"}} onError={(e)=>{if(e.target.src!==CHARACTERS.find(c=>c.id===unlockedChars[0])?.fallback)e.target.src=CHARACTERS.find(c=>c.id===unlockedChars[0])?.fallback;}} />
+             <img src={allCharacters.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"20%", left:"10%"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[0])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[0])?.fallback;}} />
           )}
           {unlockedChars.length > 1 && (
-             <img src={CHARACTERS.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"50%", right:"10%", animationDelay:"1s"}} onError={(e)=>{if(e.target.src!==CHARACTERS.find(c=>c.id===unlockedChars[1])?.fallback)e.target.src=CHARACTERS.find(c=>c.id===unlockedChars[1])?.fallback;}} />
+             <img src={allCharacters.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"50%", right:"10%", animationDelay:"1s"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[1])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[1])?.fallback;}} />
           )}
 
           <div className="map-path">
@@ -923,12 +1001,12 @@ function App() {
                 </form>
               ) : quiz.type === "original_writing" ? (
                 <form className="write-form" onSubmit={submitOriginalWriting}>
+                  {/* ★修正: プレースホルダーの余計な例文を削除 */}
                   <textarea className="write-input" value={inputVal} onChange={e=>setInputVal(e.target.value)} disabled={selected!==null} placeholder="ここに英文を入力してください..." />
                   {!selected && <button className="btn-submit-write" type="submit" disabled={!inputVal.trim()}>自動判定する</button>}
                 </form>
               ) : quiz.type === "speaking" ? (
                 <div className="opts" style={{gap:"12px"}}>
-                  {/* ★ 音声認識エラー時の救済UI（フォールバック） */}
                   {speechFallback && !selected ? (
                     <>
                       <div className="fdbk-warning">⚠️ 無音・雑音等により音声認識が中断されました。<br/>ご自身で判定して学習を進めてください。</div>
@@ -974,7 +1052,7 @@ function App() {
                     <br/>{quiz.expression.meaning}
                   </div>
                   <div className="fdbk-ex">
-                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>🇯 ঐতি {quiz.expression.exampleJa}
+                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>🇯🇵 {quiz.expression.exampleJa}
                   </div>
                 </div>
               )}
@@ -1034,11 +1112,11 @@ function App() {
         <div className="scroll" style={{padding:"20px 0"}}>
           <div style={{padding:"0 20px", marginBottom:10}}>
             <div style={{fontSize:22,fontWeight:900}}>📖 イラスト図鑑</div>
-            <div style={{fontSize:13,color:"var(--muted)",marginTop:4}}>集めたイラスト：{unlockedChars.length} / {CHARACTERS.length}</div>
+            <div style={{fontSize:13,color:"var(--muted)",marginTop:4}}>集めたイラスト：{unlockedChars.length} / {allCharacters.length}</div>
           </div>
           
           <div className="col-grid">
-            {CHARACTERS.map(char => {
+            {allCharacters.map(char => {
               const isUnlocked = unlockedChars.includes(char.id);
               const count = charCounts[char.id] || 0;
               return (
