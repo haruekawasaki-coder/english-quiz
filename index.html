@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (自動採点＆動くスタンプ搭載版)</title>
+  <title>English Quiz (音声認識ストレス軽減版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -148,7 +148,6 @@
     .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
     .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     @keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
     .yeastken-img{width:140px;height:140px;object-fit:contain;margin:10px 0;animation:floatChar 2s infinite ease-in-out alternate;}
   </style>
 </head>
@@ -164,12 +163,12 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwu8KtiWduIE_Bp9OSYP0Do
 async function gasGet(params) { const url = GAS_URL + "?" + new URLSearchParams(params); const res = await fetch(url); return res.json(); }
 async function gasPost(action, data) { const body = new URLSearchParams({ action, data: JSON.stringify(data) }); const res = await fetch(GAS_URL, { method:"POST", body }); return res.json(); }
 
-const LS_EXPRS  = "quiz-exprs-v15";
-const LS_STAGE  = "quiz-stage-v15";
-const LS_POINTS = "quiz-points-v15";
-const LS_CHARS  = "quiz-chars-v15";
-const LS_COUNTS = "quiz-counts-v15";
-const LS_LOGIN  = "quiz-login-v15";
+const LS_EXPRS  = "quiz-exprs-v17";
+const LS_STAGE  = "quiz-stage-v17";
+const LS_POINTS = "quiz-points-v17";
+const LS_CHARS  = "quiz-chars-v17";
+const LS_COUNTS = "quiz-counts-v17";
+const LS_LOGIN  = "quiz-login-v17";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -180,7 +179,6 @@ const DUMMY = [
   { id:3, phrase:"bite off more than you can chew", meaning:"手に負えないほど多くのことを引き受ける", example:"He bit off more than he could chew.", exampleJa:"彼は手に負えなくなった。", url:"https://youtube.com", status:"学習中", attempts:4, correctCount:3 },
 ];
 
-// ★ 新しいスタンプ群（APNG対応：IOS/main_animation@2x.png、非対応絵文字は静止画）
 const CHARACTERS = [
   { id: "c1", name: "buddle puppy", url: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/IOS/main_animation@2x.png", fallback: "https://stickershop.line-scdn.net/stickershop/v1/product/27427946/LINEStorePC/main.png" },
   { id: "c2", name: "いーすとけん 絵文字", url: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png", fallback: "https://stickershop.line-scdn.net/sticonshop/v1/product/6a2bb148ecd6623f20a8f97d/iPhone/main.png" },
@@ -239,7 +237,6 @@ function createSlideTone(freqStart, freqEnd, type, startTime, duration, volStart
 }
 
 function playPtSE() {
-  if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
   const mt = (f,s,d) => {
     try {
       const ctx = initAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
@@ -264,7 +261,6 @@ function playOkSE() {
   createTone(1318.51, 'triangle', 0.06, 0.12, 0.15, 0.01);
 }
 function playNextSE() {
-  if (navigator.vibrate) navigator.vibrate([30]);
   createSlideTone(400, 800, 'sine', 0, 0.1, 0.35, 0.001); 
 }
 
@@ -358,7 +354,6 @@ const formatOpt = (str) => {
   return s;
 };
 
-// ★ ファジー検索で語形変化対応
 function getFuzzyPat(w) {
   const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   let pat = escapeRegExp(w);
@@ -557,9 +552,9 @@ function App() {
   const [normalStage,   setNormalStage]   = useState(1);
   const [inputVal,      setInputVal]      = useState("");
   
-  // ★ 音声認識用のステート
   const [isListening,   setIsListening]   = useState(false);
-  const [transcript,    setTranscript]    = useState("");
+  // ★ 音声認識エラー時に、UIを自動採点から手動の自己評価に切り替えるステート
+  const [speechFallback,setSpeechFallback]= useState(false); 
 
   const [unlockedChars, setUnlockedChars] = useState([]);
   const [charCounts,    setCharCounts]    = useState({});
@@ -618,7 +613,7 @@ function App() {
     if (!pool.length) { setQuiz(null); return; }
     const expr = pool[Math.floor(Math.random() * pool.length)];
     setQuiz(generateQuiz(expr, list, exclude));
-    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal(""); setTranscript(""); setIsListening(false);
+    setSelected(null); setIsCorrect(null); setShowFB(false); setPlaying(false); setInputVal(""); setIsListening(false); setSpeechFallback(false);
   }, []);
 
   function showToast(msg) {
@@ -629,11 +624,11 @@ function App() {
     setBatch([]); setTab(mode); pickQuiz(exprsRef.current, mode);
   }
 
-  // ★ 音声認識（自動採点）スタート
+  // ★ 音声認識スタート（エラー時はアラートを出さずにフォールバックへ）
   function handleStartListening() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("お使いのブラウザは音声認識に対応していません。\n下のボタンからこの問題をスキップしてください。");
+      setSpeechFallback(true);
       return;
     }
     try {
@@ -642,37 +637,32 @@ function App() {
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
-      recognition.onstart = () => { setIsListening(true); setTranscript(""); };
+      recognition.onstart = () => { setIsListening(true); };
       recognition.onresult = (event) => {
         const speechResult = event.results[0][0].transcript;
-        setTranscript(speechResult);
-        
-        // 採点ロジック (例文の半分以上の単語が含まれていればOKとする)
         const targetWords = quiz.expression.example.toLowerCase().replace(/[.,?!]/g, '').split(/\s+/);
         const heardWords = speechResult.toLowerCase().replace(/[.,?!]/g, '').split(/\s+/);
         let matchCount = 0;
         targetWords.forEach(w => { if(heardWords.includes(w)) matchCount++; });
         const isCorrect = (matchCount / targetWords.length) >= 0.5; 
-        
-        handleAnswerLogic(speechResult, isCorrect, true); // true = force grading mode
+        handleAnswerLogic(speechResult, isCorrect, true); 
       };
       recognition.onerror = (event) => {
-        alert("音声認識エラー: " + event.error + "\nもう一度試すかスキップしてください。");
+        // iOSでよくあるaborted等が出た場合は、ウザいアラートを出さずに手動採点UIに切り替える
         setIsListening(false);
+        setSpeechFallback(true); 
       };
       recognition.onend = () => setIsListening(false);
       recognition.start();
     } catch(e) {
-      alert("音声認識を起動できませんでした。スキップしてください。");
+      setIsListening(false);
+      setSpeechFallback(true);
     }
   }
 
-  // ★ 英作文（自分で作る）の自動採点提出
   function submitOriginalWriting(e) {
     e.preventDefault();
     if(!inputVal.trim()) return;
-    
-    // 活用形に対応するため、フレーズの単語が「半分以上」含まれていれば正解とする
     const words = quiz.expression.phrase.split(/\s+/);
     let matchCount = 0;
     const heardWords = inputVal.toLowerCase().replace(/[.,?!]/g, '');
@@ -680,7 +670,6 @@ function App() {
       if (new RegExp(getFuzzyPat(w), "i").test(heardWords)) matchCount++;
     });
     const isCorrect = matchCount >= (words.length * 0.5);
-    
     handleAnswerLogic(inputVal, isCorrect, true);
   }
 
@@ -688,7 +677,10 @@ function App() {
     pickQuiz(exprsRef.current, tab, ["speaking"]);
   }
 
-  // 通常の問題の回答受付
+  function handleSelfGrade(correct) {
+    handleAnswerLogic(correct ? "スムーズに言えた" : "つっかえた", correct, true);
+  }
+
   function handleAnswer(option) {
     if (selected || !quiz) return;
     const isWrite = quiz.type === "writing";
@@ -699,7 +691,6 @@ function App() {
     handleAnswerLogic(option, correct, false);
   }
 
-  // 採点・状態更新の共通ロジック
   function handleAnswerLogic(userAnsString, isCorrectFlag, isAutoGradedOutput) {
     if (isCorrectFlag) {
       playOkSE();
@@ -809,7 +800,7 @@ function App() {
 
       {gasError&&<div className="banner err">❌ GAS接続エラー — キャッシュで動作中</div>}
 
-      {/* ═══ HOME (通常マップ) ════════════ */}
+      {/* ═══ HOME ════════════ */}
       {tab === "home" && (
         <div className="map-container">
           <div style={{textAlign:"center",marginBottom:20,padding:"0 20px",zIndex:10}}>
@@ -915,7 +906,6 @@ function App() {
                 
                 {quiz.type==="listening"&&<button className={`speak-btn${playing?" playing":""}`} onClick={handleSpeak}><Icons.Speaker/>{playing?"再生中…":"タップして音声を再生"}</button>}
                 
-                {/* スピーキング問題用表示 */}
                 {quiz.type==="speaking"&&<>
                   <div className="ex-sentence" style={{fontSize:"18px",background:"#f0f8ff",borderColor:"#bce0fd"}}>{quiz.expression.example}</div>
                   <div className="ex-ja" style={{marginBottom:16}}>🇯🇵 {quiz.expression.exampleJa}</div>
@@ -938,7 +928,15 @@ function App() {
                 </form>
               ) : quiz.type === "speaking" ? (
                 <div className="opts" style={{gap:"12px"}}>
-                  {!selected ? (
+                  {/* ★ 音声認識エラー時の救済UI（フォールバック） */}
+                  {speechFallback && !selected ? (
+                    <>
+                      <div className="fdbk-warning">⚠️ 無音・雑音等により音声認識が中断されました。<br/>ご自身で判定して学習を進めてください。</div>
+                      <button className="opt ok" onClick={()=>handleSelfGrade(true)} disabled={!!selected} style={{textAlign:"center",background:"var(--green)!important",color:"#fff!important",borderColor:"var(--gd)!important"}}><Icons.Mic/> スムーズに言えた！</button>
+                      <button className="opt ng" onClick={()=>handleSelfGrade(false)} disabled={!!selected} style={{textAlign:"center"}}><Icons.Cross/> つっかえてしまった</button>
+                      <button className="skip-btn" onClick={handleSkipSpeaking}>この問題をスキップ（別問題へ）</button>
+                    </>
+                  ) : !selected ? (
                     <>
                       <button className={`btn-submit-write ${isListening ? "playing" : ""}`} onClick={handleStartListening} disabled={isListening}>
                         {isListening ? <><Icons.Mic/> 聞き取り中...</> : <><Icons.Mic/> マイクを押して発音する</>}
@@ -962,14 +960,13 @@ function App() {
                 <div className={`fdbk ${isCorrect?"ok":"ng"}`}>
                   <div className="fdbk-ttl">{isCorrect?<><Icons.Check/> 正解！</>:<><Icons.Cross/> 不正解…</>}</div>
                   <div className="fdbk-body">
-                    {/* ★ 自分で作る・スピーキング固有のフィードバック */}
                     {quiz.type==="original_writing" && !isCorrect && (
                       <span style={{color:"var(--rd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>⚠️ お題のフレーズ（またはその活用形）が正しく含まれていないようです。<br/><br/>あなたの入力:<br/>{selected}</span>
                     )}
-                    {quiz.type==="speaking" && !isCorrect && (
+                    {quiz.type==="speaking" && !isCorrect && selected !== "つっかえた" && (
                       <span style={{color:"var(--rd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>⚠️ 例文の単語があまり聞き取れませんでした。<br/><br/>認識された音声:<br/>{selected}</span>
                     )}
-                    {quiz.type==="speaking" && isCorrect && (
+                    {quiz.type==="speaking" && isCorrect && selected !== "スムーズに言えた" && (
                       <span style={{color:"var(--gd)",fontSize:"13px",display:"block",marginBottom:"6px"}}>🎤 認識された音声:<br/>{selected}</span>
                     )}
                     
@@ -977,7 +974,7 @@ function App() {
                     <br/>{quiz.expression.meaning}
                   </div>
                   <div className="fdbk-ex">
-                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>🇯🇵 {quiz.expression.exampleJa}
+                    📖 {quiz.expression.example} <MiniSpeaker text={quiz.expression.example}/><br/>🇯 ঐতি {quiz.expression.exampleJa}
                   </div>
                 </div>
               )}
