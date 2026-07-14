@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (シート完全同期・AI添削版)</title>
+  <title>English Quiz (完全同期・AI添削版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -167,17 +167,17 @@ const { useState, useEffect, useCallback, useRef } = React;
 
 const BATCH_SIZE = 10;
 
-// ★ 新しいGASのURLを設定しました ★
+// ★ ユーザー様ご指定の最新GAS_URL ★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzLPEZvKzo9j87p2nUZgInjjUvDKQxw9GkzhxfSx4C517niYUCpQKHCh1m9cs4BcaIvjg/exec";
 
-const LS_EXPRS  = "quiz-exprs-v19";
-const LS_STAGE  = "quiz-stage-v19";
-const LS_POINTS = "quiz-points-v19";
-const LS_CHARS  = "quiz-chars-v19";
-const LS_COUNTS = "quiz-counts-v19";
-const LS_LOGIN  = "quiz-login-v19";
-const LS_STAMP_DB = "quiz-stamp-db-v3"; 
-const LS_PREV_URLS = "quiz-prev-stamp-urls-v3"; 
+const LS_EXPRS  = "quiz-exprs-v20";
+const LS_STAGE  = "quiz-stage-v20";
+const LS_POINTS = "quiz-points-v20";
+const LS_CHARS  = "quiz-chars-v20";
+const LS_COUNTS = "quiz-counts-v20";
+const LS_LOGIN  = "quiz-login-v20";
+const LS_STAMP_DB = "quiz-stamp-db-v4"; 
+const LS_PREV_URLS = "quiz-prev-stamp-urls-v4"; 
 const LS_GEMINI_KEY = "quiz-gemini-key-v1";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
