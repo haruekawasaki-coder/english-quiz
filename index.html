@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (完全連携版 v22)</title>
+  <title>English Quiz (AI添削 完全動作版 v23)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -171,14 +171,14 @@ const BATCH_SIZE = 10;
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGDZhdODhTGhtmn-aG0krBAYtVbS1iokpfuqKIbdsfUcKlEqKdsAp_wVbfBMTZ1qvI7w/exec";
 
 // ★ バージョンを上げて古いキャッシュを完全リセット ★
-const LS_EXPRS  = "quiz-exprs-v22";
-const LS_STAGE  = "quiz-stage-v22";
-const LS_POINTS = "quiz-points-v22";
-const LS_CHARS  = "quiz-chars-v22";
-const LS_COUNTS = "quiz-counts-v22";
-const LS_LOGIN  = "quiz-login-v22";
-const LS_STAMP_DB = "quiz-stamp-db-v6"; 
-const LS_PREV_URLS = "quiz-prev-stamp-urls-v6"; 
+const LS_EXPRS  = "quiz-exprs-v23";
+const LS_STAGE  = "quiz-stage-v23";
+const LS_POINTS = "quiz-points-v23";
+const LS_CHARS  = "quiz-chars-v23";
+const LS_COUNTS = "quiz-counts-v23";
+const LS_LOGIN  = "quiz-login-v23";
+const LS_STAMP_DB = "quiz-stamp-db-v7"; 
+const LS_PREV_URLS = "quiz-prev-stamp-urls-v7"; 
 const LS_GEMINI_KEY = "quiz-gemini-key-v3";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
@@ -735,7 +735,8 @@ function App() {
   "betterExpression": "ユーザーの言いたかったことを踏まえた、より自然でネイティブらしい英語表現"
 }`;
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      // ★ AIのモデル名を gemini-3.5-flash に書き換えました ★
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
