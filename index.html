@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <!-- ★ タブの名前を分かりやすく変更しました！ ★ -->
-  <title>English Quiz (v21 接続確認版)</title>
+  <title>English Quiz (完全連携版 v22)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -168,19 +167,19 @@ const { useState, useEffect, useCallback, useRef } = React;
 
 const BATCH_SIZE = 10;
 
-// ★ ユーザー様ご指定の最新GAS_URL ★
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzIIebkPki7eEav01BPT1g5U-swCrxKGWQVKSM-zb8GGTOYZg4nUoeYt-SvJIDfr-rs/exec";
+// ★ 新しいGASのURL（最終版） ★
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzGDZhdODhTGhtmn-aG0krBAYtVbS1iokpfuqKIbdsfUcKlEqKdsAp_wVbfBMTZ1qvI7w/exec";
 
 // ★ バージョンを上げて古いキャッシュを完全リセット ★
-const LS_EXPRS  = "quiz-exprs-v21";
-const LS_STAGE  = "quiz-stage-v21";
-const LS_POINTS = "quiz-points-v21";
-const LS_CHARS  = "quiz-chars-v21";
-const LS_COUNTS = "quiz-counts-v21";
-const LS_LOGIN  = "quiz-login-v21";
-const LS_STAMP_DB = "quiz-stamp-db-v5"; 
-const LS_PREV_URLS = "quiz-prev-stamp-urls-v5"; 
-const LS_GEMINI_KEY = "quiz-gemini-key-v2";
+const LS_EXPRS  = "quiz-exprs-v22";
+const LS_STAGE  = "quiz-stage-v22";
+const LS_POINTS = "quiz-points-v22";
+const LS_CHARS  = "quiz-chars-v22";
+const LS_COUNTS = "quiz-counts-v22";
+const LS_LOGIN  = "quiz-login-v22";
+const LS_STAMP_DB = "quiz-stamp-db-v6"; 
+const LS_PREV_URLS = "quiz-prev-stamp-urls-v6"; 
+const LS_GEMINI_KEY = "quiz-gemini-key-v3";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
@@ -679,6 +678,27 @@ function App() {
 
   useEffect(() => { if (exprs.length) lsSet(LS_EXPRS, exprs); }, [exprs]);
 
+  // ★ GASとの通信関数（GET / POST）★
+  const gasGet = async (params) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${GAS_URL}?${query}`);
+    if (!res.ok) throw new Error("GAS GET Error");
+    return res.json();
+  };
+
+  const gasPost = async (action, data) => {
+    const formData = new URLSearchParams();
+    formData.append("action", action);
+    formData.append("data", JSON.stringify(data));
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData
+    });
+    if (!res.ok) throw new Error("GAS POST Error");
+    return res.json();
+  };
+
   const pickQuiz = useCallback((list, targetTab, exclude=[]) => {
     const isW = targetTab === "weak_quiz";
     const pool = isW ? list.filter(e => e.status !== "習得済み" && e.attempts > 0 && (e.correctCount / e.attempts) < 0.7) : list.filter(e => e.status !== "習得済み");
@@ -882,6 +902,13 @@ function App() {
     if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) window.location.href = `googlechromes://${url}`;
     else if (/android/i.test(ua)) window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end`;
     else window.open(`https://${url}`, "_blank");
+  };
+
+  const handleRestore = (id) => {
+    const ne = exprs.map(e=>e.id===id?{...e,status:"未学習",attempts:0,correctCount:0}:e);
+    setExprs(ne); showToast("🔄 未学習に戻しました");
+    const phrase = ne.find(e=>e.id===id).phrase;
+    gasPost("updateStatus",{phrase,status:"未学習"}).catch(()=>{});
   };
 
   const buyItem = (price) => {
@@ -1199,21 +1226,25 @@ function App() {
       {/* ═══ LEARNED TAB ════════════ */}
       {tab==="learned"&&(
         <div className="scroll">
-          <div className="ll-hdr"><div className="ll-title">⭐ 習得済みリスト</div><div className="ll-sub">「戻す」で未学習に復元できます</div></div>
+          <div className="ll-hdr" style={{padding:"16px", background:"#fff", borderBottom:"1px solid var(--border)", position:"sticky", top:0, zIndex:10}}>
+            <div style={{fontSize:18, fontWeight:900, color:"#333"}}>⭐ 習得済みリスト</div>
+            <div style={{fontSize:12, color:"var(--muted)", marginTop:4}}>「戻す」で未学習に復元できます</div>
+          </div>
           {learned.length===0?(
             <div style={{padding:"60px 24px",textAlign:"center"}}><div style={{fontSize:48,marginBottom:14}}>🌱</div><div style={{fontSize:15,color:"var(--muted)",fontWeight:600,lineHeight:1.75}}>まだ習得済みの表現がありません。</div></div>
           ):(
-            <div className="ll-list">
+            <div style={{padding:"12px 16px"}}>
               {learned.map(expr=>{
                 return (
-                  <div key={expr.id} className="ll-item">
-                    <div className="ll-icon"><Icons.Star/></div>
-                    <div className="ll-body">
-                      <div className="ll-phrase">{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
-                      <div className="ll-meaning">{expr.meaning.split("。")[0]}</div>
-                      <div className="ll-ex">{expr.example}</div>
+                  <div key={expr.id} style={{background:"var(--card)", border:"2px solid var(--border)", borderRadius:"12px", padding:"14px", marginBottom:"10px", display:"flex", flexDirection:"column", gap:"8px"}}>
+                    <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start"}}>
+                      <div style={{fontSize:16, fontWeight:900, color:"#222"}}>{expr.phrase} <MiniSpeaker text={expr.phrase}/></div>
+                      <button onClick={()=>handleRestore(expr.id)} style={{background:"#f0f0f0", border:"none", padding:"6px 10px", borderRadius:"6px", fontSize:11, fontWeight:800, color:"#666", cursor:"pointer", display:"flex", alignItems:"center", gap:"4px"}}>
+                        <Icons.Refresh/> 戻す
+                      </button>
                     </div>
-                    <button className="btn-restore" onClick={()=>handleRestore(expr.id)}><Icons.Refresh/> 戻す</button>
+                    <div style={{fontSize:13, fontWeight:700, color:"var(--gd)"}}>{expr.meaning.split("。")[0]}</div>
+                    <div style={{fontSize:13, color:"#444", lineHeight:1.5, background:"#f9f9f9", padding:"8px", borderRadius:"8px"}}>{expr.example}</div>
                   </div>
                 );
               })}
