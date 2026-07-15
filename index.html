@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (AI添削 完全動作版 v23)</title>
+  <title>English Quiz (AI添削 完全動作版 v24)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -171,14 +171,14 @@ const BATCH_SIZE = 10;
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGDZhdODhTGhtmn-aG0krBAYtVbS1iokpfuqKIbdsfUcKlEqKdsAp_wVbfBMTZ1qvI7w/exec";
 
 // ★ バージョンを上げて古いキャッシュを完全リセット ★
-const LS_EXPRS  = "quiz-exprs-v23";
-const LS_STAGE  = "quiz-stage-v23";
-const LS_POINTS = "quiz-points-v23";
-const LS_CHARS  = "quiz-chars-v23";
-const LS_COUNTS = "quiz-counts-v23";
-const LS_LOGIN  = "quiz-login-v23";
-const LS_STAMP_DB = "quiz-stamp-db-v7"; 
-const LS_PREV_URLS = "quiz-prev-stamp-urls-v7"; 
+const LS_EXPRS  = "quiz-exprs-v24";
+const LS_STAGE  = "quiz-stage-v24";
+const LS_POINTS = "quiz-points-v24";
+const LS_CHARS  = "quiz-chars-v24";
+const LS_COUNTS = "quiz-counts-v24";
+const LS_LOGIN  = "quiz-login-v24";
+const LS_STAMP_DB = "quiz-stamp-db-v8"; 
+const LS_PREV_URLS = "quiz-prev-stamp-urls-v8"; 
 const LS_GEMINI_KEY = "quiz-gemini-key-v3";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
@@ -429,7 +429,8 @@ function generateQuiz(expression, all, excludeTypes=[]) {
     return { type, question:"🗣️ 例文を声に出して読んでみましょう", meaningHint: expression.meaning.split("。")[0], expression };
   }
   if (type === "original_writing") {
-    return { type, question:"📝 この表現を使って、自分なりの英文を作成してみましょう", meaningHint: expression.meaning.split("。")[0], expression };
+    // ★ ここを変更！：英文作成問題であることが明確に伝わるようにしました ★
+    return { type, question:`📝 「${expression.meaning.split("。")[0]}」という意味の表現を使って、自分なりの英文を作成してみましょう`, meaningHint: expression.meaning.split("。")[0], expression };
   }
   
   const dynPhrase = extractDynamicPhrase(expression.phrase, expression.example);
@@ -720,7 +721,26 @@ function App() {
   async function gradeWithAI(userAns) {
     setIsGrading(true);
     try {
-      const prompt = `あなたは優しくて優秀な英語教師です。以下のユーザーの英作文を添削してください。
+      // ★ ここを変更！：問題のタイプによってAIへの指示（プロンプト）を出し分けます ★
+      let prompt = "";
+      
+      if (quiz.type === "writing") {
+        // タイピング問題（フレーズ当て）の時のAIへの指示
+        prompt = `あなたは優しくて優秀な英語教師です。
+ユーザーは「${quiz.expression.meaning}」という意味の英語フレーズ（単語の組み合わせ）を答えるクイズに挑戦しています。文章（英作文）を作る問題ではありません。
+
+【正解のフレーズ】: ${quiz.expression.phrase}
+【ユーザーの回答】: ${userAns}
+
+以下の形式のJSONで返答してください。必ずJSON形式のみを出力してください。
+{
+  "isCorrect": true または false (正解のフレーズと一致している、または意味的に合っていればtrue),
+  "feedback": "ユーザーへのフィードバック（日本語）。良かった点は褒め、スペルミスがあれば優しく指摘してください。「文章にしましょう」や「主語を補いましょう」などの指摘は不要です。",
+  "betterExpression": "ユーザーの回答を踏まえた、より正しいフレーズ（※文章ではなくフレーズ単体で提示）"
+}`;
+      } else {
+        // 自分で作る問題（英作文）の時のAIへの指示
+        prompt = `あなたは優しくて優秀な英語教師です。以下のユーザーの英作文を添削してください。
 
 【お題のフレーズ】: ${quiz.expression.phrase}
 【意味】: ${quiz.expression.meaning}
@@ -734,8 +754,8 @@ function App() {
   "feedback": "ユーザーへのフィードバック（日本語）。良かった点は褒め、文法ミスや不自然な点があれば優しく指摘してください。",
   "betterExpression": "ユーザーの言いたかったことを踏まえた、より自然でネイティブらしい英語表現"
 }`;
+      }
 
-      // ★ AIのモデル名を gemini-3.5-flash に書き換えました ★
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
