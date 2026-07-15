@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (完全同期・AI添削版)</title>
+  <!-- ★ タブの名前を分かりやすく変更しました！ ★ -->
+  <title>English Quiz (v21 接続確認版)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -168,17 +169,18 @@ const { useState, useEffect, useCallback, useRef } = React;
 const BATCH_SIZE = 10;
 
 // ★ ユーザー様ご指定の最新GAS_URL ★
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzLPEZvKzo9j87p2nUZgInjjUvDKQxw9GkzhxfSx4C517niYUCpQKHCh1m9cs4BcaIvjg/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzIIebkPki7eEav01BPT1g5U-swCrxKGWQVKSM-zb8GGTOYZg4nUoeYt-SvJIDfr-rs/exec";
 
-const LS_EXPRS  = "quiz-exprs-v20";
-const LS_STAGE  = "quiz-stage-v20";
-const LS_POINTS = "quiz-points-v20";
-const LS_CHARS  = "quiz-chars-v20";
-const LS_COUNTS = "quiz-counts-v20";
-const LS_LOGIN  = "quiz-login-v20";
-const LS_STAMP_DB = "quiz-stamp-db-v4"; 
-const LS_PREV_URLS = "quiz-prev-stamp-urls-v4"; 
-const LS_GEMINI_KEY = "quiz-gemini-key-v1";
+// ★ バージョンを上げて古いキャッシュを完全リセット ★
+const LS_EXPRS  = "quiz-exprs-v21";
+const LS_STAGE  = "quiz-stage-v21";
+const LS_POINTS = "quiz-points-v21";
+const LS_CHARS  = "quiz-chars-v21";
+const LS_COUNTS = "quiz-counts-v21";
+const LS_LOGIN  = "quiz-login-v21";
+const LS_STAMP_DB = "quiz-stamp-db-v5"; 
+const LS_PREV_URLS = "quiz-prev-stamp-urls-v5"; 
+const LS_GEMINI_KEY = "quiz-gemini-key-v2";
 
 function lsGet(key, fallback=null) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; } catch { return fallback; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
