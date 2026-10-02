@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>English Quiz (AI添削 完全動作版 v24)</title>
+  <title>English Quiz (Duolingo風マップ版 v25)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   
@@ -33,20 +33,28 @@
     .ntab.on{color:var(--blue);border-top-color:var(--blue);}
     .badge-red{background:#ffe5e5;color:var(--rd);border-radius:99px;padding:1px 7px;font-size:9px;font-weight:900;}
 
-    .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:40px 0 80px;background:#f0f5f0;position:relative;}
-    .map-path{display:flex;flex-direction:column-reverse;align-items:center;gap:40px;position:relative;width:100%;margin-top:20px;}
-    .map-line{position:absolute;top:30px;bottom:30px;width:12px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
-    .map-line-fill{position:absolute;bottom:0;width:100%;background:var(--green);border-radius:10px;transition:height 1s ease;}
-    .node-wrap{position:relative;z-index:2;display:flex;justify-content:center;width:100%;}
-    .map-node{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer;border:4px solid #fff;transition:transform .2s;-webkit-tap-highlight-color:transparent;}
+    /* ▼ マップのスタイルを上から下への連続型に大幅変更しました ▼ */
+    .map-container{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:0 0 80px;background:#f0f5f0;position:relative;scroll-behavior:smooth;}
+    .map-path{display:flex;flex-direction:column;align-items:center;position:relative;width:100%;padding:20px 0 60px;}
+    .map-line{position:absolute;top:60px;bottom:60px;width:16px;background:var(--border);left:50%;transform:translateX(-50%);z-index:1;border-radius:10px;}
+    .map-line-fill{position:absolute;top:0;width:100%;background:var(--green);border-radius:10px;transition:height 1s cubic-bezier(0.34, 1.56, 0.64, 1);}
+    
+    .unit-header{background:var(--yellow);color:#5a3f00;padding:16px 20px;border-radius:18px;font-weight:900;font-size:18px;z-index:3;margin:20px 16px 10px;box-shadow:0 5px 0 var(--yd);width:calc(100% - 32px);text-align:left;display:flex;flex-direction:column;gap:4px;position:relative;}
+    .unit-header.cleared{background:var(--green);color:#fff;box-shadow:0 5px 0 var(--gd);}
+    .unit-header-sub{font-size:12px;opacity:0.9;letter-spacing:0.05em;text-transform:uppercase;}
+    
+    .node-wrap{position:relative;z-index:2;display:flex;justify-content:center;width:100%;margin:18px 0;}
+    .map-node{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;cursor:pointer;border:4px solid #fff;transition:transform .2s;-webkit-tap-highlight-color:transparent;}
     .map-node.locked{background:#e5e5e5;color:#bbb;}
     .map-node.cleared{background:var(--green);color:#fff;box-shadow:0 6px 0 var(--gd);}
     .map-node.current{background:var(--yellow);color:#fff;box-shadow:0 6px 0 var(--yd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
     .map-node.weak{background:var(--red);color:#fff;box-shadow:0 6px 0 var(--rd);animation:float 2s infinite ease-in-out;transform:scale(1.15);}
-    .map-start-btn{position:absolute;top:-50px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
+    
+    .map-start-btn{position:absolute;top:-55px;background:#fff;border:2px solid var(--border);padding:8px 16px;border-radius:12px;font-size:14px;font-weight:900;color:var(--blue);box-shadow:0 4px 12px rgba(0,0,0,.1);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;z-index:4;}
     .map-start-btn.weak{color:var(--red);}
     .map-start-btn::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:#fff;border-right:2px solid var(--border);border-bottom:2px solid var(--border);}
-    .floating-char{position:absolute;width:65px;height:65px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:1;}
+    
+    .floating-char{position:fixed;width:65px;height:65px;object-fit:contain;animation:floatChar 4s infinite ease-in-out alternate;z-index:10;pointer-events:none;}
     @keyframes floatChar{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-15px) rotate(5deg)}}
     @keyframes float{0%,100%{transform:scale(1.15) translateY(0)}50%{transform:scale(1.15) translateY(-6px)}}
     @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
@@ -170,7 +178,7 @@ const BATCH_SIZE = 10;
 // ★ 新しいGASのURL（最終版） ★
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzGDZhdODhTGhtmn-aG0krBAYtVbS1iokpfuqKIbdsfUcKlEqKdsAp_wVbfBMTZ1qvI7w/exec";
 
-// ★ バージョンを上げて古いキャッシュを完全リセット ★
+// ※データ引き継ぎのため、ストレージキーはv24のままにしています
 const LS_EXPRS  = "quiz-exprs-v24";
 const LS_STAGE  = "quiz-stage-v24";
 const LS_POINTS = "quiz-points-v24";
@@ -429,7 +437,6 @@ function generateQuiz(expression, all, excludeTypes=[]) {
     return { type, question:"🗣️ 例文を声に出して読んでみましょう", meaningHint: expression.meaning.split("。")[0], expression };
   }
   if (type === "original_writing") {
-    // ★ ここを変更！：英文作成問題であることが明確に伝わるようにしました ★
     return { type, question:`📝 「${expression.meaning.split("。")[0]}」という意味の表現を使って、自分なりの英文を作成してみましょう`, meaningHint: expression.meaning.split("。")[0], expression };
   }
   
@@ -677,6 +684,18 @@ function App() {
     return () => { document.removeEventListener('pointerdown', unlockAudio); document.removeEventListener('touchstart', unlockAudio); }
   }, []);
 
+  // ★ マップ画面を開いた時の自動スクロール機能 ★
+  useEffect(() => {
+    if (tab === "home" || tab === "weak_home") {
+      setTimeout(() => {
+        const currentEl = document.querySelector('.map-node.current') || document.querySelector('.map-start-btn.weak');
+        if (currentEl) {
+          currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+    }
+  }, [tab, normalStage, weakList.length]);
+
   useEffect(() => { if (exprs.length) lsSet(LS_EXPRS, exprs); }, [exprs]);
 
   // ★ GASとの通信関数（GET / POST）★
@@ -721,11 +740,9 @@ function App() {
   async function gradeWithAI(userAns) {
     setIsGrading(true);
     try {
-      // ★ ここを変更！：問題のタイプによってAIへの指示（プロンプト）を出し分けます ★
       let prompt = "";
       
       if (quiz.type === "writing") {
-        // タイピング問題（フレーズ当て）の時のAIへの指示
         prompt = `あなたは優しくて優秀な英語教師です。
 ユーザーは「${quiz.expression.meaning}」という意味の英語フレーズ（単語の組み合わせ）を答えるクイズに挑戦しています。文章（英作文）を作る問題ではありません。
 
@@ -739,7 +756,6 @@ function App() {
   "betterExpression": "ユーザーの回答を踏まえた、より正しいフレーズ（※文章ではなくフレーズ単体で提示）"
 }`;
       } else {
-        // 自分で作る問題（英作文）の時のAIへの指示
         prompt = `あなたは優しくて優秀な英語教師です。以下のユーザーの英作文を添削してください。
 
 【お題のフレーズ】: ${quiz.expression.phrase}
@@ -949,6 +965,14 @@ function App() {
     </div>
   );
 
+  // マップ画面の表示ユニット数や線の長さを計算
+  const displayUnits = Math.max(1, Math.ceil((normalStage + 2) / 5));
+  const currentUnit = Math.ceil(normalStage / 5);
+  const posInUnit = (normalStage - 1) % 5;
+  const itemsBeforeCurrent = (currentUnit - 1) * 6 + 1 + posInUnit;
+  const totalItems = displayUnits * 6;
+  const fillPercentage = Math.max(0, Math.min(100, (itemsBeforeCurrent / totalItems) * 100));
+
   return (
     <div className="app">
       <div className={`toast${toast.on?" on":""}`}>{toast.msg}</div>
@@ -976,36 +1000,45 @@ function App() {
       {/* ═══ HOME ════════════ */}
       {tab === "home" && (
         <div className="map-container">
-          <div style={{textAlign:"center",marginBottom:20,padding:"0 20px",zIndex:10}}>
-            <h2 style={{fontSize:22,fontWeight:900,color:"#333"}}>UNIT {Math.floor((normalStage-1)/5)+1}</h2>
-            <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>スプレッドシートの単語をマスターしよう</p>
-          </div>
-          
           {unlockedChars.length > 0 && (
-             <img src={allCharacters.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"20%", left:"10%"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[0])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[0])?.fallback;}} />
+             <img src={allCharacters.find(c=>c.id===unlockedChars[0])?.url} className="floating-char" style={{top:"25%", left:"8%"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[0])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[0])?.fallback;}} />
           )}
           {unlockedChars.length > 1 && (
-             <img src={allCharacters.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"50%", right:"10%", animationDelay:"1s"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[1])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[1])?.fallback;}} />
+             <img src={allCharacters.find(c=>c.id===unlockedChars[1])?.url} className="floating-char" style={{top:"65%", right:"8%", animationDelay:"1s"}} onError={(e)=>{if(e.target.src!==allCharacters.find(c=>c.id===unlockedChars[1])?.fallback)e.target.src=allCharacters.find(c=>c.id===unlockedChars[1])?.fallback;}} />
           )}
 
           <div className="map-path">
             <div className="map-line">
-              <div className="map-line-fill" style={{height: `${((normalStage - 1) % 5) * 25}%`}}/>
+              <div className="map-line-fill" style={{height: `${fillPercentage}%`}}/>
             </div>
-            {[...Array(5)].map((_, i) => {
-              const startNode = Math.floor((normalStage - 1) / 5) * 5 + 1;
-              const nodeStage = startNode + i;
-              const isCurrent = nodeStage === normalStage;
-              const isCleared = nodeStage < normalStage;
-              const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
-              
+            
+            {Array.from({ length: displayUnits }).map((_, uIdx) => {
+              const unitNum = uIdx + 1;
+              const isUnitCleared = unitNum < currentUnit;
               return (
-                <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shift})`}}>
-                  {isCurrent && <div className="map-start-btn" onClick={() => startSession("quiz")}>START</div>}
-                  <div className={`map-node ${isCurrent ? 'current' : isCleared ? 'cleared' : 'locked'}`} onClick={() => isCurrent ? startSession("quiz") : null}>
-                    {isCleared ? <Icons.Check/> : <Icons.Star/>}
+                <React.Fragment key={`unit-${unitNum}`}>
+                  <div className={`unit-header ${isUnitCleared ? 'cleared' : ''}`}>
+                    <div className="unit-header-sub">SECTION 1, UNIT {unitNum}</div>
+                    <div>スプレッドシートの単語をマスター</div>
                   </div>
-                </div>
+
+                  {Array.from({ length: 5 }).map((_, sIdx) => {
+                    const nodeStage = uIdx * 5 + sIdx + 1;
+                    const isCurrent = nodeStage === normalStage;
+                    const isCleared = nodeStage < normalStage;
+                    const globalIdx = nodeStage - 1;
+                    const shiftVal = Math.sin(globalIdx * 0.9) * 55; // デュオリンゴ風の自然なカーブ
+
+                    return (
+                      <div key={`node-${nodeStage}`} className="node-wrap" style={{ transform: `translateX(${shiftVal}px)` }}>
+                        {isCurrent && <div className="map-start-btn" onClick={() => startSession("quiz")}>START</div>}
+                        <div className={`map-node ${isCurrent ? 'current' : isCleared ? 'cleared' : 'locked'}`} onClick={() => isCurrent ? startSession("quiz") : null}>
+                          {isCleared ? <Icons.Check/> : <Icons.Star/>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
               );
             })}
           </div>
@@ -1015,22 +1048,26 @@ function App() {
       {/* ═══ WEAK HOME ════════════ */}
       {tab === "weak_home" && (
         <div className="map-container" style={{background:"#fff5f5"}}>
-          <div style={{textAlign:"center",marginBottom:20,padding:"0 20px"}}>
-            <h2 style={{fontSize:22,fontWeight:900,color:"var(--red)"}}>苦手克服タワー</h2>
+          <div style={{textAlign:"center", margin:"20px 0", padding:"0 20px", zIndex:2}}>
+            <h2 style={{fontSize:22,fontWeight:900,color:"var(--red)"}}>苦手克服ダンジョン</h2>
             <p style={{fontSize:14,color:"var(--muted)",marginTop:4}}>残りの苦手な表現：<strong>{weakList.length}個</strong></p>
           </div>
           
           {weakList.length === 0 ? (
             <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",textAlign:"center",gap:14}}>
-              <div style={{fontSize:56}}>✨</div><div style={{fontSize:20,fontWeight:900}}>タワー崩壊！</div><div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>素晴らしい定着率です！</div>
+              <div style={{fontSize:56}}>✨</div><div style={{fontSize:20,fontWeight:900}}>完全制覇！</div><div style={{fontSize:14,color:"var(--muted)",lineHeight:1.75}}>素晴らしい定着率です！</div>
             </div>
           ) : (
-            <div className="map-path">
-              <div className="map-line" style={{background:"#ffcccc"}}><div className="map-line-fill" style={{background:"var(--red)", height:"0%"}}/></div>
-              {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i, arr) => {
-                const nodeStage = arr.length - i; const isCurrent = nodeStage === 1; const shift = (nodeStage % 2 === 0) ? "30px" : "-30px";
+            <div className="map-path" style={{paddingTop:0}}>
+              <div className="map-line" style={{background:"#ffcccc", top:"20px"}}>
+                <div className="map-line-fill" style={{background:"var(--red)", height:`${(1 / Math.max(1, Math.ceil(weakList.length / BATCH_SIZE))) * 100}%`}}/>
+              </div>
+              {[...Array(Math.max(1, Math.ceil(weakList.length / BATCH_SIZE)))].map((_, i) => {
+                const nodeStage = i + 1;
+                const isCurrent = nodeStage === 1;
+                const shiftVal = Math.sin(i * 0.9) * 55;
                 return (
-                  <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shift})`}}>
+                  <div key={nodeStage} className="node-wrap" style={{transform: `translateX(${shiftVal}px)`}}>
                     {isCurrent && <div className="map-start-btn weak" onClick={() => startSession("weak_quiz")}>CHALLENGE!</div>}
                     <div className={`map-node ${isCurrent ? 'weak' : 'locked'}`} onClick={() => isCurrent ? startSession("weak_quiz") : null}><Icons.Alert/></div>
                   </div>
@@ -1288,7 +1325,7 @@ function App() {
               type="password" 
               value={geminiKey} 
               onChange={e => setGeminiKey(e.target.value)} 
-              placeholder="AIzaSy..."
+              placeholder="AQ.Ab8R..."
               style={{width:"100%", padding:"12px", borderRadius:"8px", border:"2px solid var(--border)", outline:"none", fontSize:"14px", marginTop:"8px"}}
             />
             <button 
